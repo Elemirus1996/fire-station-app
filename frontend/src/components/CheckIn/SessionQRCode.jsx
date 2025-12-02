@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import api from '../../api';
 
-const SessionQRCode = ({ sessionId }) => {
+const SessionQRCode = ({ sessionId, large = false }) => {
   const [qrUrl, setQrUrl] = useState('');
   const [loading, setLoading] = useState(true);
   const [retryCount, setRetryCount] = useState(0);
@@ -88,25 +88,32 @@ const SessionQRCode = ({ sessionId }) => {
     );
   }
 
+  // Determine QR code size classes
+  const qrSizeClass = large 
+    ? 'w-80 h-80 sm:w-96 sm:h-96 lg:w-[28rem] lg:h-[28rem]'  // Large: 400-448px
+    : 'w-48 h-48 sm:w-56 sm:h-56 lg:w-64 lg:h-64';           // Medium: 192-256px
+
   return (
     <div className="flex flex-col items-center space-y-4">
       <div className="bg-white p-6 rounded-2xl shadow-lg">
         <img 
           src={qrUrl} 
           alt="Session QR Code" 
-          className="w-64 h-64 sm:w-80 sm:h-80 lg:w-96 lg:h-96"
+          className={qrSizeClass}
           onError={handleImageError}
         />
       </div>
       
-      <div className="text-center space-y-2">
-        <p className="text-xl font-bold text-white">
-          📱 QR-Code scannen zum Check-in
-        </p>
-        <p className="text-white opacity-90">
-          Öffne die Kamera-App auf deinem Smartphone
-        </p>
-      </div>
+      {!large && (
+        <div className="text-center space-y-2">
+          <p className="text-xl font-bold text-white">
+            📱 QR-Code scannen zum Check-in
+          </p>
+          <p className="text-white opacity-90">
+            Öffne die Kamera-App auf deinem Smartphone
+          </p>
+        </div>
+      )}
 
       <div className="flex space-x-3 mt-4">
         <button
@@ -124,6 +131,7 @@ const SessionQRCode = ({ sessionId }) => {
       </div>
     </div>
   );
+};
 };
 
 export default SessionQRCode;
