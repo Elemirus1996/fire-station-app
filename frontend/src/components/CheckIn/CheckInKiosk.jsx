@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import api from '../../api';
+import SessionQRCode from './SessionQRCode';
+import AnnouncementBanner from './AnnouncementBanner';
 
 const CheckInKiosk = () => {
   const [searchParams] = useSearchParams();
@@ -12,6 +14,8 @@ const CheckInKiosk = () => {
   const [activePersonnel, setActivePersonnel] = useState([]);
   const [message, setMessage] = useState({ text: '', type: '' });
   const [showSessionSelect, setShowSessionSelect] = useState(true);
+  const [showEndSessionModal, setShowEndSessionModal] = useState(false);
+  const [endSessionNumber, setEndSessionNumber] = useState('');
 
   useEffect(() => {
     if (qrToken) {
@@ -117,17 +121,40 @@ const CheckInKiosk = () => {
 
   const createNewSession = async (eventType) => {
     try {
-      const response = await api.post('/sessions', { event_type: eventType }, {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem('token') || ''}`
-        }
-      });
+      const response = await api.post('/sessions', { event_type: eventType });
       setSelectedSession(response.data);
       setShowSessionSelect(false);
       loadActiveSessions();
+      setMessage({ text: 'Session erfolgreich erstellt!', type: 'success' });
+      setTimeout(() => setMessage({ text: '', type: '' }), 3000);
     } catch (error) {
-      // If not authenticated, just show error
-      setMessage({ text: 'Keine Berechtigung neue Session zu erstellen', type: 'error' });
+      setMessage({ text: error.response?.data?.detail || 'Fehler beim Erstellen der Session', type: 'error' });
+      setTimeout(() => setMessage({ text: '', type: '' }), 3000);
+    }
+  };
+
+  const handleEndSession = async () => {
+    if (!endSessionNumber || !selectedSession) return;
+
+    try {
+      await api.post(`/sessions/${selectedSession.id}/end-with-rank`, {
+        stammrollennummer: endSessionNumber
+      });
+      setMessage({ text: 'Session erfolgreich beendet!', type: 'success' });
+      setShowEndSessionModal(false);
+      setEndSessionNumber('');
+      // Reload sessions after a short delay
+      setTimeout(() => {
+        loadActiveSessions();
+        setSelectedSession(null);
+        setShowSessionSelect(true);
+      }, 2000);
+    } catch (error) {
+      setMessage({ 
+        text: error.response?.data?.detail || 'Fehler beim Beenden der Session', 
+        type: 'error' 
+      });
+      setTimeout(() => setMessage({ text: '', type: '' }), 5000);
     }
   };
 
@@ -170,9 +197,13 @@ const CheckInKiosk = () => {
               🔧 Arbeitsdienst C
             </button>
           </div>
-          <p className="text-center mt-8 text-gray-600">
-            Admin-Login erforderlich für Session-Erstellung
-          </p>
+          {message.text && (
+            <div className={`p-4 rounded-xl mt-6 text-center font-semibold ${
+              message.type === 'success' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+            }`}>
+              {message.text}
+            </div>
+          )}
         </div>
       </div>
     );
@@ -211,43 +242,71 @@ const CheckInKiosk = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-fire-red to-fire-orange p-4">
-      <div className="max-w-7xl mx-auto">
-        {/* Header */}
-        <div className="bg-white rounded-3xl shadow-2xl p-6 mb-4">
-          <div className="flex justify-between items-center">
-            <div>
-              <h1 className="text-4xl font-bold text-fire-red">Feuerwehr Check-In</h1>
-              {selectedSession && (
-                <p className="text-xl text-gray-600 mt-2">
-                  {selectedSession.event_type} - {new Date(selectedSession.started_at).toLocaleDateString('de-DE')}
-                </p>
-              )}
+    <div className="min-h-screen bg-gradient-to-br from-fire-red to-fire-orange">
+      {/* Announcement Banner */}
+      <AnnouncementBanner />
+      
+      <div className="p-4">
+        <div className="max-w-7xl mx-auto">
+          {/* Header */}
+          <div className="bg-white rounded-3xl shadow-2xl p-6 mb-4">
+            <div className="flex justify-between items-center">
+              <div>
+                <h1 className="text-4xl font-bold text-fire-red">Feuerwehr Check-In</h1>
+                {selectedSession && (
+                  <p className="text-xl text-gray-600 mt-2">
+                    {selectedSession.event_type} - {new Date(selectedSession.started_at).toLocaleDateString('de-DE')}
+                  </p>
+                )}
+              </div>
+              <div className="flex space-x-3">
+                {selectedSession && selectedSession.event_type === 'Einsatz' && (
+                  <button
+                    onClick={() => setShowEndSessionModal(true)}
+                    className="bg-red-600 text-white px-6 py-3 rounded-xl hover:bg-red-700 transition-all font-bold shadow-lg"
+                  >
+                    🚨 Einsatz beenden
+                  </button>
+                )}
+                {sessions.length > 1 && (
+                  <button
+                    onClick={() => setShowSessionSelect(true)}
+                    className="bg-gray-500 text-white px-6 py-3 rounded-xl hover:bg-gray-600 transition-all"
+                  >
+                    Session wechseln
+                  </button>
+                )}
+              </div>
             </div>
-            {sessions.length > 1 && (
-              <button
-                onClick={() => setShowSessionSelect(true)}
-                className="bg-gray-500 text-white px-6 py-3 rounded-xl hover:bg-gray-600 transition-all"
-              >
-                Session wechseln
-              </button>
-            )}
           </div>
-        </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-          {/* Keypad Section */}
-          <div className="bg-white rounded-3xl shadow-2xl p-8">
-            <h2 className="text-2xl font-bold text-fire-red mb-6">Stammrollennummer eingeben</h2>
-            
-            {/* Display */}
-            <div className="bg-gray-100 rounded-xl p-6 mb-6 min-h-[80px] flex items-center justify-center">
-              <span className="text-4xl font-mono font-bold text-fire-red">
-                {number || '____'}
-              </span>
+          {/* QR Code Section - Prominent Display */}
+          <div className="mb-4 flex justify-center">
+            <div className="bg-transparent p-8">
+              <SessionQRCode sessionId={selectedSession?.id} />
             </div>
+          </div>
 
-            {/* Message */}
+          {/* Divider */}
+          <div className="flex items-center my-6">
+            <div className="flex-1 border-t-2 border-white opacity-50"></div>
+            <span className="px-4 text-white text-xl font-bold">ODER</span>
+            <div className="flex-1 border-t-2 border-white opacity-50"></div>
+          </div>
+
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+            {/* Keypad Section */}
+            <div className="bg-white rounded-3xl shadow-2xl p-8">
+              <h2 className="text-2xl font-bold text-fire-red mb-6">Stammrollennummer eingeben</h2>
+              
+              {/* Display */}
+              <div className="bg-gray-100 rounded-xl p-6 mb-6 min-h-[80px] flex items-center justify-center">
+                <span className="text-4xl font-mono font-bold text-fire-red">
+                  {number || '____'}
+                </span>
+              </div>
+
+              {/* Message */}
             {message.text && (
               <div className={`p-4 rounded-xl mb-6 text-center text-lg font-semibold ${
                 message.type === 'success' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
@@ -321,6 +380,62 @@ const CheckInKiosk = () => {
               )}
             </div>
           </div>
+        </div>
+
+        {/* End Session Modal */}
+        {showEndSessionModal && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+            <div className="bg-white rounded-3xl p-8 max-w-md w-full shadow-2xl">
+              <h3 className="text-2xl font-bold text-fire-red mb-6">Einsatz beenden</h3>
+              
+              <p className="text-gray-700 mb-6">
+                Zum Beenden des Einsatzes ist mindestens der Dienstgrad <strong>Unterbrandmeister (UBM)</strong> erforderlich.
+              </p>
+
+              <div className="mb-6">
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Stammrollennummer eingeben
+                </label>
+                <input
+                  type="text"
+                  value={endSessionNumber}
+                  onChange={(e) => setEndSessionNumber(e.target.value)}
+                  className="w-full px-4 py-3 border-2 border-gray-300 rounded-xl text-2xl text-center font-mono focus:ring-2 focus:ring-fire-red focus:border-transparent"
+                  placeholder="____"
+                  autoFocus
+                />
+              </div>
+
+              {message.text && (
+                <div className={`p-4 rounded-xl mb-6 text-center font-semibold ${
+                  message.type === 'success' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+                }`}>
+                  {message.text}
+                </div>
+              )}
+
+              <div className="flex space-x-3">
+                <button
+                  onClick={handleEndSession}
+                  disabled={!endSessionNumber}
+                  className="flex-1 bg-red-600 text-white py-3 rounded-xl hover:bg-red-700 transition-all font-bold disabled:bg-gray-300 disabled:cursor-not-allowed"
+                >
+                  Einsatz beenden
+                </button>
+                <button
+                  onClick={() => {
+                    setShowEndSessionModal(false);
+                    setEndSessionNumber('');
+                    setMessage({ text: '', type: '' });
+                  }}
+                  className="flex-1 bg-gray-300 text-gray-700 py-3 rounded-xl hover:bg-gray-400 transition-all font-bold"
+                >
+                  Abbrechen
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
         </div>
       </div>
     </div>
