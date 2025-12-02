@@ -393,172 +393,171 @@ const CheckInKiosk = () => {
                 {/* Keypad Section */}
                 <div className="bg-white rounded-3xl shadow-2xl p-8">
                   <h2 className="text-2xl font-bold text-fire-red mb-6">Stammrollennummer eingeben</h2>
-              
-              {/* Display */}
-              <div className="bg-gray-100 rounded-xl p-6 mb-6 min-h-[80px] flex items-center justify-center">
-                <span className="text-4xl font-mono font-bold text-fire-red">
-                  {number || '____'}
-                </span>
-              </div>
-
-              {/* Message */}
-            {message.text && (
-              <div className={`p-4 rounded-xl mb-6 text-center text-lg font-semibold ${
-                message.type === 'success' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
-              }`}>
-                {message.text}
-              </div>
-            )}
-
-            {/* Keypad */}
-            <div className="grid grid-cols-3 gap-4 mb-6">
-              {[1, 2, 3, 4, 5, 6, 7, 8, 9].map((digit) => (
-                <button
-                  key={digit}
-                  onClick={() => handleNumberClick(digit.toString())}
-                  className="touch-button bg-fire-red text-white text-3xl font-bold rounded-2xl hover:bg-red-800 transition-all shadow-lg"
-                >
-                  {digit}
-                </button>
-              ))}
-              <button
-                onClick={handleClear}
-                className="touch-button bg-gray-500 text-white text-2xl font-bold rounded-2xl hover:bg-gray-600 transition-all shadow-lg"
-              >
-                ⌫
-              </button>
-              <button
-                onClick={() => handleNumberClick('0')}
-                className="touch-button bg-fire-red text-white text-3xl font-bold rounded-2xl hover:bg-red-800 transition-all shadow-lg"
-              >
-                0
-              </button>
-              <button
-                onClick={handleSubmit}
-                className="touch-button bg-green-600 text-white text-2xl font-bold rounded-2xl hover:bg-green-700 transition-all shadow-lg"
-              >
-                ✓
-              </button>
-            </div>
-          </div>
-
-          {/* Active Personnel List */}
-          <div className="bg-white rounded-3xl shadow-2xl p-8">
-            <h2 className="text-2xl font-bold text-fire-red mb-6">
-              Aktuell anwesend ({activePersonnel.length})
-            </h2>
-            <div className="space-y-3 max-h-[600px] overflow-y-auto">
-              {activePersonnel.length === 0 ? (
-                <p className="text-gray-500 text-center py-8">Noch niemand eingecheckt</p>
-              ) : (
-                activePersonnel.map((person) => (
-                  <div
-                    key={person.attendance_id}
-                    className="bg-gray-50 rounded-xl p-4 flex justify-between items-center hover:bg-gray-100 transition-all"
-                  >
-                    <div>
-                      <div className="font-bold text-lg text-fire-red">
-                        {person.vorname} {person.nachname}
-                      </div>
-                      <div className="text-sm text-gray-600">
-                        {person.dienstgrad_name} • Nr. {person.stammrollennummer}
-                      </div>
-                    </div>
-                    <div className="text-sm text-gray-500">
-                      {new Date(person.checked_in_at).toLocaleTimeString('de-DE', {
-                        hour: '2-digit',
-                        minute: '2-digit'
-                      })}
-                    </div>
+                  
+                  {/* Display */}
+                  <div className="bg-gray-100 rounded-xl p-6 mb-6 min-h-[80px] flex items-center justify-center">
+                    <span className="text-4xl font-mono font-bold text-fire-red">
+                      {number || '____'}
+                    </span>
                   </div>
-                ))
-              )}
-            </div>
-          </div>
-        </div>
 
-        {/* Divider */}
-        <div className="flex items-center my-6">
-          <div className="flex-1 border-t-2 border-white opacity-50"></div>
-          <span className="px-4 text-white text-xl font-bold">ODER</span>
-          <div className="flex-1 border-t-2 border-white opacity-50"></div>
-        </div>
+                  {/* Message */}
+                  {message.text && (
+                    <div className={`p-4 rounded-xl mb-6 text-center text-lg font-semibold ${
+                      message.type === 'success' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+                    }`}>
+                      {message.text}
+                    </div>
+                  )}
 
-        {/* Bottom Section: QR Code centered */}
-        <div className="flex justify-center">
-          <div className="bg-white rounded-3xl shadow-2xl p-8">
-            <SessionQRCode 
-              sessionId={selectedSession?.id}
-              large={true}
-            />
-          </div>
-        </div>
-      </>
-      ) : (
-        /* Layout when attendance list is hidden: Input and QR side by side */
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 max-w-6xl mx-auto">
-          {/* Keypad Section */}
-          <div className="bg-white rounded-3xl shadow-2xl p-8">
-            <h2 className="text-2xl font-bold text-fire-red mb-6">Stammrollennummer eingeben</h2>
-            
-            {/* Display */}
-            <div className="bg-gray-100 rounded-xl p-6 mb-6 min-h-[80px] flex items-center justify-center">
-              <span className="text-4xl font-mono font-bold text-fire-red">
-                {number || '____'}
-              </span>
-            </div>
+                  {/* Keypad */}
+                  <div className="grid grid-cols-3 gap-4 mb-6">
+                    {[1, 2, 3, 4, 5, 6, 7, 8, 9].map((digit) => (
+                      <button
+                        key={digit}
+                        onClick={() => handleNumberClick(digit.toString())}
+                        className="touch-button bg-fire-red text-white text-3xl font-bold rounded-2xl hover:bg-red-800 transition-all shadow-lg"
+                      >
+                        {digit}
+                      </button>
+                    ))}
+                    <button
+                      onClick={handleClear}
+                      className="touch-button bg-gray-500 text-white text-2xl font-bold rounded-2xl hover:bg-gray-600 transition-all shadow-lg"
+                    >
+                      ⌫
+                    </button>
+                    <button
+                      onClick={() => handleNumberClick('0')}
+                      className="touch-button bg-fire-red text-white text-3xl font-bold rounded-2xl hover:bg-red-800 transition-all shadow-lg"
+                    >
+                      0
+                    </button>
+                    <button
+                      onClick={handleSubmit}
+                      className="touch-button bg-green-600 text-white text-2xl font-bold rounded-2xl hover:bg-green-700 transition-all shadow-lg"
+                    >
+                      ✓
+                    </button>
+                  </div>
+                </div>
 
-            {/* Message */}
-            {message.text && (
-              <div className={`p-4 rounded-xl mb-6 text-center text-lg font-semibold ${
-                message.type === 'success' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
-              }`}>
-                {message.text}
+                {/* Active Personnel List */}
+                <div className="bg-white rounded-3xl shadow-2xl p-8">
+                  <h2 className="text-2xl font-bold text-fire-red mb-6">
+                    Aktuell anwesend ({activePersonnel.length})
+                  </h2>
+                  <div className="space-y-3 max-h-[600px] overflow-y-auto">
+                    {activePersonnel.length === 0 ? (
+                      <p className="text-gray-500 text-center py-8">Noch niemand eingecheckt</p>
+                    ) : (
+                      activePersonnel.map((person) => (
+                        <div
+                          key={person.attendance_id}
+                          className="bg-gray-50 rounded-xl p-4 flex justify-between items-center hover:bg-gray-100 transition-all"
+                        >
+                          <div>
+                            <div className="font-bold text-lg text-fire-red">
+                              {person.vorname} {person.nachname}
+                            </div>
+                            <div className="text-sm text-gray-600">
+                              {person.dienstgrad_name} • Nr. {person.stammrollennummer}
+                            </div>
+                          </div>
+                          <div className="text-sm text-gray-500">
+                            {new Date(person.checked_in_at).toLocaleTimeString('de-DE', {
+                              hour: '2-digit',
+                              minute: '2-digit'
+                            })}
+                          </div>
+                        </div>
+                      ))
+                    )}
+                  </div>
+                </div>
               </div>
-            )}
 
-            {/* Keypad */}
-            <div className="grid grid-cols-3 gap-4 mb-6">
-              {[1, 2, 3, 4, 5, 6, 7, 8, 9].map((digit) => (
-                <button
-                  key={digit}
-                  onClick={() => handleNumberClick(digit.toString())}
-                  className="touch-button bg-fire-red text-white text-3xl font-bold rounded-2xl hover:bg-red-800 transition-all shadow-lg"
-                >
-                  {digit}
-                </button>
-              ))}
-              <button
-                onClick={handleClear}
-                className="touch-button bg-gray-500 text-white text-2xl font-bold rounded-2xl hover:bg-gray-600 transition-all shadow-lg"
-              >
-                ⌫
-              </button>
-              <button
-                onClick={() => handleNumberClick('0')}
-                className="touch-button bg-fire-red text-white text-3xl font-bold rounded-2xl hover:bg-red-800 transition-all shadow-lg"
-              >
-                0
-              </button>
-              <button
-                onClick={handleSubmit}
-                className="touch-button bg-green-600 text-white text-2xl font-bold rounded-2xl hover:bg-green-700 transition-all shadow-lg"
-              >
-                ✓
-              </button>
+              {/* Divider */}
+              <div className="flex items-center my-6">
+                <div className="flex-1 border-t-2 border-white opacity-50"></div>
+                <span className="px-4 text-white text-xl font-bold">ODER</span>
+                <div className="flex-1 border-t-2 border-white opacity-50"></div>
+              </div>
+
+              {/* Bottom Section: QR Code centered */}
+              <div className="flex justify-center">
+                <div className="bg-white rounded-3xl shadow-2xl p-8">
+                  <SessionQRCode 
+                    sessionId={selectedSession?.id}
+                    large={true}
+                  />
+                </div>
+              </div>
+            </>
+          ) : (
+            /* Layout when attendance list is hidden: Input and QR side by side */
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 max-w-6xl mx-auto">
+              {/* Keypad Section */}
+              <div className="bg-white rounded-3xl shadow-2xl p-8">
+                <h2 className="text-2xl font-bold text-fire-red mb-6">Stammrollennummer eingeben</h2>
+                
+                {/* Display */}
+                <div className="bg-gray-100 rounded-xl p-6 mb-6 min-h-[80px] flex items-center justify-center">
+                  <span className="text-4xl font-mono font-bold text-fire-red">
+                    {number || '____'}
+                  </span>
+                </div>
+
+                {/* Message */}
+                {message.text && (
+                  <div className={`p-4 rounded-xl mb-6 text-center text-lg font-semibold ${
+                    message.type === 'success' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+                  }`}>
+                    {message.text}
+                  </div>
+                )}
+
+                {/* Keypad */}
+                <div className="grid grid-cols-3 gap-4 mb-6">
+                  {[1, 2, 3, 4, 5, 6, 7, 8, 9].map((digit) => (
+                    <button
+                      key={digit}
+                      onClick={() => handleNumberClick(digit.toString())}
+                      className="touch-button bg-fire-red text-white text-3xl font-bold rounded-2xl hover:bg-red-800 transition-all shadow-lg"
+                    >
+                      {digit}
+                    </button>
+                  ))}
+                  <button
+                    onClick={handleClear}
+                    className="touch-button bg-gray-500 text-white text-2xl font-bold rounded-2xl hover:bg-gray-600 transition-all shadow-lg"
+                  >
+                    ⌫
+                  </button>
+                  <button
+                    onClick={() => handleNumberClick('0')}
+                    className="touch-button bg-fire-red text-white text-3xl font-bold rounded-2xl hover:bg-red-800 transition-all shadow-lg"
+                  >
+                    0
+                  </button>
+                  <button
+                    onClick={handleSubmit}
+                    className="touch-button bg-green-600 text-white text-2xl font-bold rounded-2xl hover:bg-green-700 transition-all shadow-lg"
+                  >
+                    ✓
+                  </button>
+                </div>
+              </div>
+
+              {/* QR Code Section */}
+              <div className="bg-white rounded-3xl shadow-2xl p-8 flex flex-col items-center justify-center">
+                <SessionQRCode 
+                  sessionId={selectedSession?.id}
+                  large={true}
+                />
+              </div>
             </div>
-          </div>
-
-          {/* QR Code Section */}
-          <div className="bg-white rounded-3xl shadow-2xl p-8 flex flex-col items-center justify-center">
-            <SessionQRCode 
-              sessionId={selectedSession?.id}
-              large={true}
-            />
-          </div>
-        </div>
-      )}
-        </div>
+          )}
 
         {/* End Session Modal */}
         {showEndSessionModal && (
