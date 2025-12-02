@@ -17,6 +17,7 @@ const CheckInKiosk = () => {
   const [showEndSessionModal, setShowEndSessionModal] = useState(false);
   const [endSessionNumber, setEndSessionNumber] = useState('');
   const [systemSettings, setSystemSettings] = useState(null);
+  const [isMobileQRView, setIsMobileQRView] = useState(false);
 
   useEffect(() => {
     // Load system settings
@@ -25,6 +26,8 @@ const CheckInKiosk = () => {
     if (qrToken) {
       // Validate QR token and get session
       validateQRToken();
+      // Set mobile QR view flag
+      setIsMobileQRView(true);
     } else {
       loadActiveSessions();
     }
@@ -258,6 +261,91 @@ const CheckInKiosk = () => {
     );
   }
 
+  // Mobile QR View - Only show input field
+  if (isMobileQRView && selectedSession) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-fire-red to-fire-orange">
+        {/* Announcement Banner */}
+        <AnnouncementBanner />
+        
+        <div className="p-4">
+          <div className="max-w-md mx-auto">
+            {/* Header */}
+            <div className="bg-white rounded-3xl shadow-2xl p-6 mb-4">
+              <h1 className="text-3xl font-bold text-fire-red text-center">Feuerwehr Check-In</h1>
+              <p className="text-lg text-gray-600 mt-2 text-center">
+                {selectedSession.event_type}
+              </p>
+              <p className="text-sm text-gray-500 text-center">
+                {new Date(selectedSession.started_at).toLocaleDateString('de-DE')}
+              </p>
+            </div>
+
+            {/* Keypad Section */}
+            <div className="bg-white rounded-3xl shadow-2xl p-6">
+              <h2 className="text-xl font-bold text-fire-red mb-4 text-center">
+                Stammrollennummer eingeben
+              </h2>
+              
+              {/* Display */}
+              <div className="bg-gray-100 rounded-xl p-6 mb-4 min-h-[70px] flex items-center justify-center">
+                <span className="text-3xl font-mono font-bold text-fire-red">
+                  {number || '____'}
+                </span>
+              </div>
+
+              {/* Message */}
+              {message.text && (
+                <div className={`p-4 rounded-xl mb-4 text-center font-semibold ${
+                  message.type === 'success' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+                }`}>
+                  {message.text}
+                </div>
+              )}
+
+              {/* Keypad */}
+              <div className="grid grid-cols-3 gap-3 mb-4">
+                {[1, 2, 3, 4, 5, 6, 7, 8, 9].map((digit) => (
+                  <button
+                    key={digit}
+                    onClick={() => handleNumberClick(digit.toString())}
+                    className="touch-button bg-fire-red text-white text-2xl font-bold rounded-xl hover:bg-red-800 transition-all shadow-lg h-16"
+                  >
+                    {digit}
+                  </button>
+                ))}
+                <button
+                  onClick={handleClear}
+                  className="touch-button bg-gray-500 text-white text-xl font-bold rounded-xl hover:bg-gray-600 transition-all shadow-lg h-16"
+                >
+                  ⌫
+                </button>
+                <button
+                  onClick={() => handleNumberClick('0')}
+                  className="touch-button bg-fire-red text-white text-2xl font-bold rounded-xl hover:bg-red-800 transition-all shadow-lg h-16"
+                >
+                  0
+                </button>
+                <button
+                  onClick={handleSubmit}
+                  className="touch-button bg-green-600 text-white text-xl font-bold rounded-xl hover:bg-green-700 transition-all shadow-lg h-16"
+                >
+                  ✓
+                </button>
+              </div>
+            </div>
+
+            {/* Active Personnel Count */}
+            <div className="bg-white rounded-2xl shadow-lg p-4 mt-4 text-center">
+              <p className="text-gray-600 text-sm">Aktuell anwesend</p>
+              <p className="text-3xl font-bold text-fire-red">{activePersonnel.length}</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-fire-red to-fire-orange">
       {/* Announcement Banner */}
@@ -297,42 +385,13 @@ const CheckInKiosk = () => {
             </div>
           </div>
 
-          {/* QR Code Section - Size depends on settings */}
-          <div className={`mb-4 flex justify-center ${
-            systemSettings?.kiosk_show_attendance_list ? '' : 'py-8'
-          }`}>
-            <div className={`bg-transparent ${
-              systemSettings?.kiosk_show_attendance_list ? 'p-4' : 'p-8'
-            }`}>
-              <SessionQRCode 
-                sessionId={selectedSession?.id}
-                large={!systemSettings?.kiosk_show_attendance_list}
-              />
-              {!systemSettings?.kiosk_show_attendance_list && (
-                <div className="text-center mt-6">
-                  <p className="text-2xl font-bold text-white">
-                    📱 QR-Code scannen zum Check-in
-                  </p>
-                  <p className="text-xl text-white opacity-90 mt-2">
-                    mit dem Smartphone
-                  </p>
-                </div>
-              )}
-            </div>
-          </div>
-
-          {/* Divider */}
-          <div className="flex items-center my-6">
-            <div className="flex-1 border-t-2 border-white opacity-50"></div>
-            <span className="px-4 text-white text-xl font-bold">ODER</span>
-            <div className="flex-1 border-t-2 border-white opacity-50"></div>
-          </div>
-
           <div className={`grid gap-4 ${
-            systemSettings?.kiosk_show_attendance_list ? 'grid-cols-1 lg:grid-cols-2' : 'grid-cols-1 max-w-2xl mx-auto'
+            systemSettings?.kiosk_show_attendance_list ? 'grid-cols-1 lg:grid-cols-3' : 'grid-cols-1 max-w-2xl mx-auto'
           }`}>
             {/* Keypad Section */}
-            <div className="bg-white rounded-3xl shadow-2xl p-8">
+            <div className={`bg-white rounded-3xl shadow-2xl p-8 ${
+              systemSettings?.kiosk_show_attendance_list ? 'lg:col-span-2' : ''
+            }`}>
               <h2 className="text-2xl font-bold text-fire-red mb-6">Stammrollennummer eingeben</h2>
               
               {/* Display */}
@@ -382,6 +441,43 @@ const CheckInKiosk = () => {
               </button>
             </div>
           </div>
+
+          {/* QR Code Section - Beside input when list is shown */}
+          {systemSettings?.kiosk_show_attendance_list && (
+            <div className="bg-white rounded-3xl shadow-2xl p-8 flex flex-col items-center justify-center">
+              <SessionQRCode 
+                sessionId={selectedSession?.id}
+                large={false}
+              />
+            </div>
+          )}
+
+          {/* QR Code Section - Large centered when list is hidden */}
+          {!systemSettings?.kiosk_show_attendance_list && (
+            <>
+              <div className="flex items-center my-6">
+                <div className="flex-1 border-t-2 border-white opacity-50"></div>
+                <span className="px-4 text-white text-xl font-bold">ODER</span>
+                <div className="flex-1 border-t-2 border-white opacity-50"></div>
+              </div>
+              <div className="mb-4 flex justify-center py-8 max-w-2xl mx-auto">
+                <div className="bg-transparent p-8">
+                  <SessionQRCode 
+                    sessionId={selectedSession?.id}
+                    large={true}
+                  />
+                  <div className="text-center mt-6">
+                    <p className="text-2xl font-bold text-white">
+                      📱 QR-Code scannen zum Check-in
+                    </p>
+                    <p className="text-xl text-white opacity-90 mt-2">
+                      mit dem Smartphone
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </>
+          )}
 
           {/* Active Personnel Section - Conditional */}
           {systemSettings?.kiosk_show_attendance_list && (
