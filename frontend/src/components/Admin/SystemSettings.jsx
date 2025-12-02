@@ -39,7 +39,7 @@ const SystemSettings = () => {
     });
     
     // Warnung bei localhost
-    if (detectedUrl.includes('localhost') || detectedUrl.includes('127.0.0.1')) {
+    if (detectedUrl.includes('localhost') || detectedUrl.includes('127.0.0.1') || detectedUrl.includes('::1')) {
       setMessage({
         text: '⚠️ Du greifst aktuell über localhost zu. Öffne die App über deine Netzwerk-IP (z.B. http://192.168.1.100:5173) damit die Auto-Erkennung funktioniert.',
         type: 'warning'

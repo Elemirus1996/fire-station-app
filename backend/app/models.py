@@ -113,9 +113,13 @@ class SystemSettings(Base):
     backup_path = Column(String(500), default="./backups")
     backup_schedule_time = Column(String(5), default="02:00")
     backup_retention_days = Column(Integer, default=30)
+    # Note: New columns added for QR code configuration. SQLAlchemy will auto-create these on first run.
+    # For existing databases, run: ALTER TABLE system_settings ADD COLUMN kiosk_base_url VARCHAR(500) DEFAULT 'http://localhost:5173';
+    # ALTER TABLE system_settings ADD COLUMN kiosk_show_attendance_list BOOLEAN DEFAULT TRUE;
     kiosk_base_url = Column(String(500), default="http://localhost:5173")
     kiosk_show_attendance_list = Column(Boolean, default=True)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
 
 
 class UserPreferences(Base):
