@@ -16,9 +16,8 @@ const SessionQRCode = ({ sessionId }) => {
 
   const loadQRCode = () => {
     setLoading(true);
-    // Build the QR code URL
-    const baseUrl = api.defaults.baseURL || 'http://localhost:8000';
-    setQrUrl(`${baseUrl}/api/sessions/${sessionId}/qr`);
+    // Use the proxied API endpoint
+    setQrUrl(`/api/sessions/${sessionId}/qr`);
     setLoading(false);
   };
 
