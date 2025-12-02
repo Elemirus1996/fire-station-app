@@ -1,0 +1,15 @@
+[Unit]
+Description=Feuerwehr Anwesenheitssystem Backend
+After=network.target
+
+[Service]
+Type=simple
+User=feuerwehr
+WorkingDirectory=/opt/fire-station-app/backend
+Environment="PATH=/opt/fire-station-app/backend/venv/bin"
+ExecStart=/opt/fire-station-app/backend/venv/bin/python main.py
+Restart=always
+RestartSec=10
+
+[Install]
+WantedBy=multi-user.target
