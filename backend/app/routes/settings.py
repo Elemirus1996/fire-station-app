@@ -189,3 +189,55 @@ async def validate_backup_path(request: ValidatePathRequest):
         "valid": is_valid,
         "message": message
     }
+
+# System Settings
+class SystemSettingsUpdate(BaseModel):
+    kiosk_base_url: Optional[str] = None
+    kiosk_show_attendance_list: Optional[bool] = None
+
+@router.get("/system")
+async def get_system_settings(db: Session = Depends(get_db)):
+    """Get system settings including kiosk configuration"""
+    settings = db.query(SystemSettings).first()
+    
+    if not settings:
+        settings = SystemSettings()
+        db.add(settings)
+        db.commit()
+        db.refresh(settings)
+    
+    return {
+        "kiosk_base_url": settings.kiosk_base_url,
+        "kiosk_show_attendance_list": settings.kiosk_show_attendance_list
+    }
+
+@router.put("/system")
+async def update_system_settings(
+    settings: SystemSettingsUpdate,
+    db: Session = Depends(get_db),
+    current_user: AdminUser = Depends(get_current_user)
+):
+    """Update system settings"""
+    check_permission(current_user, "settings:update")
+    
+    sys_settings = db.query(SystemSettings).first()
+    if not sys_settings:
+        sys_settings = SystemSettings()
+        db.add(sys_settings)
+    
+    update_data = settings.dict(exclude_unset=True)
+    
+    # Validate kiosk_base_url if provided
+    if "kiosk_base_url" in update_data:
+        url = update_data["kiosk_base_url"]
+        if url and not (url.startswith("http://") or url.startswith("https://")):
+            raise HTTPException(
+                status_code=400, 
+                detail="Base-URL muss mit http:// oder https:// beginnen"
+            )
+    
+    for field, value in update_data.items():
+        setattr(sys_settings, field, value)
+    
+    db.commit()
+    return {"message": "System-Einstellungen erfolgreich aktualisiert"}

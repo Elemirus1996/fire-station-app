@@ -4,7 +4,7 @@ from sqlalchemy.orm import Session
 from pydantic import BaseModel
 from io import BytesIO
 from ..database import get_db
-from ..models import Session as SessionModel, AdminUser
+from ..models import Session as SessionModel, AdminUser, SystemSettings
 from ..utils.auth import get_current_user
 from ..utils.permissions import check_permission
 from ..services.qr_generator import QRGenerator
@@ -26,7 +26,13 @@ async def get_session_qr(
     if not session.is_active:
         raise HTTPException(status_code=400, detail="Session ist nicht aktiv")
     
-    qr_bytes = QRGenerator.generate_qr_code(session_id)
+    # Load kiosk base URL from system settings
+    sys_settings = db.query(SystemSettings).first()
+    base_url = "http://localhost:5173"  # Default fallback
+    if sys_settings and sys_settings.kiosk_base_url:
+        base_url = sys_settings.kiosk_base_url
+    
+    qr_bytes = QRGenerator.generate_qr_code(session_id, base_url)
     
     return Response(
         content=qr_bytes,
