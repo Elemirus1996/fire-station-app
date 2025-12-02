@@ -396,18 +396,18 @@ const CheckInKiosk = () => {
         {/* Announcement Banner */}
         <AnnouncementBanner />
       
-      <div className="p-4">
-        <div className="max-w-7xl mx-auto">
-          {/* Header */}
-          <div className="bg-white rounded-3xl shadow-2xl p-6 mb-4">
-            <div className="flex justify-between items-center">
-              <div>
-                <h1 className="text-4xl font-bold text-fire-red">Feuerwehr Check-In</h1>
-                {selectedSession && (
-                  <p className="text-xl text-gray-600 mt-2">
-                    {selectedSession.event_type} - {new Date(selectedSession.started_at).toLocaleDateString('de-DE')}
-                  </p>
-                )}
+        <div className="p-4">
+          <div className="max-w-7xl mx-auto">
+            {/* Header */}
+            <div className="bg-white rounded-3xl shadow-2xl p-6 mb-4">
+              <div className="flex justify-between items-center">
+                <div>
+                  <h1 className="text-4xl font-bold text-fire-red">Feuerwehr Check-In</h1>
+                  {selectedSession && (
+                    <p className="text-xl text-gray-600 mt-2">
+                      {selectedSession.event_type} - {new Date(selectedSession.started_at).toLocaleDateString('de-DE')}
+                    </p>
+                  )}
               </div>
               <div className="flex space-x-3">
                 {selectedSession && selectedSession.event_type === 'Einsatz' && (
@@ -604,64 +604,63 @@ const CheckInKiosk = () => {
             </div>
           )}
 
-        {/* End Session Modal */}
-        {showEndSessionModal && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-            <div className="bg-white rounded-3xl p-8 max-w-md w-full shadow-2xl">
-              <h3 className="text-2xl font-bold text-fire-red mb-6">Einsatz beenden</h3>
-              
-              <p className="text-gray-700 mb-6">
-                Zum Beenden des Einsatzes ist mindestens der Dienstgrad <strong>Unterbrandmeister (UBM)</strong> erforderlich.
-              </p>
+          {/* End Session Modal */}
+          {showEndSessionModal && (
+            <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+              <div className="bg-white rounded-3xl p-8 max-w-md w-full shadow-2xl">
+                <h3 className="text-2xl font-bold text-fire-red mb-6">Einsatz beenden</h3>
+                
+                <p className="text-gray-700 mb-6">
+                  Zum Beenden des Einsatzes ist mindestens der Dienstgrad <strong>Unterbrandmeister (UBM)</strong> erforderlich.
+                </p>
 
-              <div className="mb-6">
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Stammrollennummer eingeben
-                </label>
-                <input
-                  type="text"
-                  value={endSessionNumber}
-                  onChange={(e) => setEndSessionNumber(e.target.value)}
-                  className="w-full px-4 py-3 border-2 border-gray-300 rounded-xl text-2xl text-center font-mono focus:ring-2 focus:ring-fire-red focus:border-transparent"
-                  placeholder="____"
-                  autoFocus
-                />
-              </div>
-
-              {message.text && (
-                <div className={`p-4 rounded-xl mb-6 text-center font-semibold ${
-                  message.type === 'success' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
-                }`}>
-                  {message.text}
+                <div className="mb-6">
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Stammrollennummer eingeben
+                  </label>
+                  <input
+                    type="text"
+                    value={endSessionNumber}
+                    onChange={(e) => setEndSessionNumber(e.target.value)}
+                    className="w-full px-4 py-3 border-2 border-gray-300 rounded-xl text-2xl text-center font-mono focus:ring-2 focus:ring-fire-red focus:border-transparent"
+                    placeholder="____"
+                    autoFocus
+                  />
                 </div>
-              )}
 
-              <div className="flex space-x-3">
-                <button
-                  onClick={handleEndSession}
-                  disabled={!endSessionNumber}
-                  className="flex-1 bg-red-600 text-white py-3 rounded-xl hover:bg-red-700 transition-all font-bold disabled:bg-gray-300 disabled:cursor-not-allowed"
-                >
-                  Einsatz beenden
-                </button>
-                <button
-                  onClick={() => {
-                    setShowEndSessionModal(false);
-                    setEndSessionNumber('');
-                    setMessage({ text: '', type: '' });
-                  }}
-                  className="flex-1 bg-gray-300 text-gray-700 py-3 rounded-xl hover:bg-gray-400 transition-all font-bold"
-                >
-                  Abbrechen
-                </button>
+                {message.text && (
+                  <div className={`p-4 rounded-xl mb-6 text-center font-semibold ${
+                    message.type === 'success' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+                  }`}>
+                    {message.text}
+                  </div>
+                )}
+
+                <div className="flex space-x-3">
+                  <button
+                    onClick={handleEndSession}
+                    disabled={!endSessionNumber}
+                    className="flex-1 bg-red-600 text-white py-3 rounded-xl hover:bg-red-700 transition-all font-bold disabled:bg-gray-300 disabled:cursor-not-allowed"
+                  >
+                    Einsatz beenden
+                  </button>
+                  <button
+                    onClick={() => {
+                      setShowEndSessionModal(false);
+                      setEndSessionNumber('');
+                      setMessage({ text: '', type: '' });
+                    }}
+                    className="flex-1 bg-gray-300 text-gray-700 py-3 rounded-xl hover:bg-gray-400 transition-all font-bold"
+                  >
+                    Abbrechen
+                  </button>
               </div>
             </div>
           </div>
         )}
+          </div>
         </div>
       </div>
     </>
   );
-};
-
-export default CheckInKiosk;
+};export default CheckInKiosk;
