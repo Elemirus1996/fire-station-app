@@ -1,13 +1,15 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Header
 from sqlalchemy.orm import Session
 from pydantic import BaseModel
 from typing import List, Optional
 from datetime import datetime
 from ..database import get_db
 from ..models import Session as SessionModel, Attendance, Personnel, AdminUser, MIN_RANG_EINSATZ_BEENDEN, DIENSTGRADE
-from ..utils.auth import get_current_user
+from ..utils.auth import get_current_user, decode_token
 from ..utils.permissions import check_permission
 from ..services.session_manager import SessionManager
+from ..services.qr_generator import QRGenerator
+from fastapi.responses import Response
 
 router = APIRouter(prefix="/api/sessions", tags=["sessions"])
 
@@ -16,6 +18,9 @@ class SessionCreate(BaseModel):
 
 class SessionEnd(BaseModel):
     pass
+
+class SessionEndWithRank(BaseModel):
+    stammrollennummer: str
 
 @router.get("")
 async def list_sessions(
@@ -90,10 +95,22 @@ async def get_session(
 async def create_session(
     session: SessionCreate,
     db: Session = Depends(get_db),
-    current_user: AdminUser = Depends(get_current_user)
+    authorization: Optional[str] = Header(None)
 ):
-    """Create new session"""
-    check_permission(current_user, "sessions:create")
+    """Create new session - accessible from kiosk without auth or with admin auth"""
+    # Try to get user from token if provided
+    current_user = None
+    if authorization and authorization.startswith("Bearer "):
+        token = authorization.replace("Bearer ", "")
+        payload = decode_token(token)
+        if payload:
+            username = payload.get("sub")
+            if username:
+                current_user = db.query(AdminUser).filter(AdminUser.username == username).first()
+    
+    # If user is authenticated, check permissions
+    if current_user:
+        check_permission(current_user, "sessions:create")
     
     valid_types = ["Einsatz", "Übungsdienst", "Arbeitsdienst-A", "Arbeitsdienst-B", "Arbeitsdienst-C"]
     if session.event_type not in valid_types:
@@ -101,7 +118,7 @@ async def create_session(
     
     new_session = SessionModel(
         event_type=session.event_type,
-        created_by=current_user.id,
+        created_by=current_user.id if current_user else None,
         is_active=True
     )
     db.add(new_session)
@@ -121,7 +138,7 @@ async def end_session(
     db: Session = Depends(get_db),
     current_user: AdminUser = Depends(get_current_user)
 ):
-    """End a session manually"""
+    """End a session manually (admin interface)"""
     session = db.query(SessionModel).filter(SessionModel.id == session_id).first()
     if not session:
         raise HTTPException(status_code=404, detail="Session nicht gefunden")
@@ -129,11 +146,51 @@ async def end_session(
     if not session.is_active:
         raise HTTPException(status_code=400, detail="Session ist bereits beendet")
     
-    # Check permission for Einsatz - requires UBM or higher
+    # Check permission
+    check_permission(current_user, "sessions:end")
+    
+    success = SessionManager.end_session(db, session_id)
+    
+    if success:
+        return {"message": "Session erfolgreich beendet"}
+    else:
+        raise HTTPException(status_code=400, detail="Fehler beim Beenden der Session")
+
+@router.post("/{session_id}/end-with-rank")
+async def end_session_with_rank(
+    session_id: int,
+    request: SessionEndWithRank,
+    db: Session = Depends(get_db)
+):
+    """End a session with rank validation (kiosk interface for Einsatz)"""
+    session = db.query(SessionModel).filter(SessionModel.id == session_id).first()
+    if not session:
+        raise HTTPException(status_code=404, detail="Session nicht gefunden")
+    
+    if not session.is_active:
+        raise HTTPException(status_code=400, detail="Session ist bereits beendet")
+    
+    # Only Einsatz requires rank validation for ending
     if session.event_type == "Einsatz":
-        check_permission(current_user, "sessions:end")
-        # Additional check for rank - get current user's personnel record if exists
-        # For now, just check admin permissions
+        # Find personnel by stammrollennummer
+        personnel = db.query(Personnel).filter(
+            Personnel.stammrollennummer == request.stammrollennummer,
+            Personnel.is_active == True
+        ).first()
+        
+        if not personnel:
+            raise HTTPException(status_code=404, detail="Personal nicht gefunden")
+        
+        # Get dienstgrad level
+        dienstgrad_info = DIENSTGRADE.get(personnel.dienstgrad, (personnel.dienstgrad, 0))
+        dienstgrad_level = dienstgrad_info[1]
+        
+        # Check if rank is sufficient (UBM = Level 4 or higher)
+        if dienstgrad_level < MIN_RANG_EINSATZ_BEENDEN:
+            raise HTTPException(
+                status_code=403, 
+                detail=f"Unzureichender Dienstgrad. Mindestens {DIENSTGRADE.get('UBM', ('UBM', 4))[0]} erforderlich."
+            )
     
     success = SessionManager.end_session(db, session_id)
     
@@ -176,3 +233,21 @@ async def get_active_sessions(db: Session = Depends(get_db)):
         })
     
     return result
+
+@router.get("/{session_id}/qr")
+async def get_session_qr_code(
+    session_id: int,
+    db: Session = Depends(get_db)
+):
+    """Generate QR code for session check-in (no auth required for kiosk)"""
+    session = db.query(SessionModel).filter(SessionModel.id == session_id).first()
+    if not session:
+        raise HTTPException(status_code=404, detail="Session nicht gefunden")
+    
+    if not session.is_active:
+        raise HTTPException(status_code=400, detail="Session ist nicht aktiv")
+    
+    # Generate QR code
+    qr_bytes = QRGenerator.generate_qr_code(session_id)
+    
+    return Response(content=qr_bytes, media_type="image/png")

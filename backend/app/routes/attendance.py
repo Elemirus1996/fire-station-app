@@ -4,6 +4,7 @@ from pydantic import BaseModel
 from datetime import datetime
 from ..database import get_db
 from ..models import Attendance, Personnel, Session as SessionModel, DIENSTGRADE
+from ..services.qr_generator import QRGenerator
 
 router = APIRouter(prefix="/api/attendance", tags=["attendance"])
 
@@ -14,6 +15,9 @@ class CheckInRequest(BaseModel):
 class CheckOutRequest(BaseModel):
     session_id: int
     stammrollennummer: str
+
+class ValidateTokenRequest(BaseModel):
+    token: str
 
 @router.post("/checkin")
 async def check_in(
@@ -136,3 +140,31 @@ async def get_active_attendees(
         })
     
     return result
+
+@router.post("/validate-token")
+async def validate_qr_token(
+    request: ValidateTokenRequest,
+    db: Session = Depends(get_db)
+):
+    """Validate QR code token and return session info"""
+    payload = QRGenerator.validate_session_token(request.token)
+    
+    if not payload:
+        raise HTTPException(status_code=400, detail="Ungültiger oder abgelaufener QR-Code")
+    
+    session_id = payload.get("session_id")
+    if not session_id:
+        raise HTTPException(status_code=400, detail="Ungültiger QR-Code")
+    
+    # Verify session exists and is active
+    session = db.query(SessionModel).filter(SessionModel.id == session_id).first()
+    if not session:
+        raise HTTPException(status_code=404, detail="Session nicht gefunden")
+    
+    if not session.is_active:
+        raise HTTPException(status_code=400, detail="Session ist nicht aktiv")
+    
+    return {
+        "valid": True,
+        "session_id": session_id
+    }
