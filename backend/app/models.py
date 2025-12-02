@@ -118,7 +118,24 @@ class SystemSettings(Base):
     # ALTER TABLE system_settings ADD COLUMN kiosk_show_attendance_list BOOLEAN DEFAULT TRUE;
     kiosk_base_url = Column(String(500), default="http://localhost:5173")
     kiosk_show_attendance_list = Column(Boolean, default=True)
+    screensaver_enabled = Column(Boolean, default=True)
+    screensaver_timeout = Column(Integer, default=300)  # seconds
+    screensaver_show_logo = Column(Boolean, default=True)
+    screensaver_show_clock = Column(Boolean, default=True)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+
+class News(Base):
+    __tablename__ = "news"
+    
+    id = Column(Integer, primary_key=True, index=True)
+    title = Column(String(200), nullable=False)
+    content = Column(Text, nullable=False)
+    priority = Column(String(20), default="normal")  # low, normal, high, urgent
+    is_active = Column(Boolean, default=True)
+    created_at = Column(DateTime, default=datetime.utcnow)
+    expires_at = Column(DateTime)
+    created_by = Column(String(100))
 
 
 

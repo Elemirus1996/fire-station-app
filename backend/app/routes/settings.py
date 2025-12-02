@@ -194,6 +194,10 @@ async def validate_backup_path(request: ValidatePathRequest):
 class SystemSettingsUpdate(BaseModel):
     kiosk_base_url: Optional[str] = None
     kiosk_show_attendance_list: Optional[bool] = None
+    screensaver_enabled: Optional[bool] = None
+    screensaver_timeout: Optional[int] = None
+    screensaver_show_logo: Optional[bool] = None
+    screensaver_show_clock: Optional[bool] = None
 
 @router.get("/system")
 async def get_system_settings(db: Session = Depends(get_db)):
@@ -208,6 +212,11 @@ async def get_system_settings(db: Session = Depends(get_db)):
     
     return {
         "kiosk_base_url": settings.kiosk_base_url,
+        "kiosk_show_attendance_list": settings.kiosk_show_attendance_list,
+        "screensaver_enabled": settings.screensaver_enabled if hasattr(settings, 'screensaver_enabled') else True,
+        "screensaver_timeout": settings.screensaver_timeout if hasattr(settings, 'screensaver_timeout') else 300,
+        "screensaver_show_logo": settings.screensaver_show_logo if hasattr(settings, 'screensaver_show_logo') else True,
+        "screensaver_show_clock": settings.screensaver_show_clock if hasattr(settings, 'screensaver_show_clock') else True,
         "kiosk_show_attendance_list": settings.kiosk_show_attendance_list
     }
 

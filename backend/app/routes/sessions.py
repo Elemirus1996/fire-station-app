@@ -39,6 +39,14 @@ async def list_sessions(
         attendances = db.query(Attendance).filter(Attendance.session_id == s.id).all()
         active_count = sum(1 for a in attendances if a.checked_out_at is None)
         
+        # Calculate duration
+        if s.is_active:
+            duration_seconds = int((datetime.now() - s.started_at).total_seconds())
+        elif s.ended_at:
+            duration_seconds = int((s.ended_at - s.started_at).total_seconds())
+        else:
+            duration_seconds = 0
+        
         result.append({
             "id": s.id,
             "event_type": s.event_type,
@@ -46,7 +54,8 @@ async def list_sessions(
             "ended_at": s.ended_at,
             "is_active": s.is_active,
             "total_attendees": len(attendances),
-            "active_attendees": active_count
+            "active_attendees": active_count,
+            "duration_seconds": duration_seconds
         })
     
     return result

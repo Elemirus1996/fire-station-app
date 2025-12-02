@@ -1,8 +1,10 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import api from '../../api';
 import SessionQRCode from './SessionQRCode';
 import AnnouncementBanner from './AnnouncementBanner';
+import NewsBanner from './NewsBanner';
+import Screensaver from './Screensaver';
 
 const CheckInKiosk = () => {
   const [searchParams] = useSearchParams();
@@ -18,6 +20,8 @@ const CheckInKiosk = () => {
   const [endSessionNumber, setEndSessionNumber] = useState('');
   const [systemSettings, setSystemSettings] = useState(null);
   const [isMobileQRView, setIsMobileQRView] = useState(false);
+  const [showScreensaver, setShowScreensaver] = useState(false);
+  const inactivityTimerRef = useRef(null);
 
   useEffect(() => {
     // Load system settings
@@ -41,6 +45,34 @@ const CheckInKiosk = () => {
     }
   }, [selectedSession]);
 
+  // Screensaver inactivity detection
+  useEffect(() => {
+    if (!systemSettings?.screensaver_enabled || isMobileQRView) return;
+
+    const resetTimer = () => {
+      if (inactivityTimerRef.current) {
+        clearTimeout(inactivityTimerRef.current);
+      }
+      setShowScreensaver(false);
+      
+      const timeout = (systemSettings?.screensaver_timeout || 300) * 1000;
+      inactivityTimerRef.current = setTimeout(() => {
+        setShowScreensaver(true);
+      }, timeout);
+    };
+
+    const events = ['mousedown', 'mousemove', 'keypress', 'scroll', 'touchstart', 'click'];
+    events.forEach(event => document.addEventListener(event, resetTimer));
+    resetTimer();
+
+    return () => {
+      events.forEach(event => document.removeEventListener(event, resetTimer));
+      if (inactivityTimerRef.current) {
+        clearTimeout(inactivityTimerRef.current);
+      }
+    };
+  }, [systemSettings, isMobileQRView]);
+
   const loadSystemSettings = async () => {
     try {
       const response = await api.get('/settings/system');
@@ -49,9 +81,15 @@ const CheckInKiosk = () => {
       console.error('Fehler beim Laden der System-Einstellungen:', error);
       // Set defaults if loading fails
       setSystemSettings({
-        kiosk_show_attendance_list: true
+        kiosk_show_attendance_list: true,
+        screensaver_enabled: true,
+        screensaver_timeout: 300
       });
     }
+  };
+
+  const handleScreensaverActivity = () => {
+    setShowScreensaver(false);
   };
 
   const validateQRToken = async () => {
@@ -347,9 +385,16 @@ const CheckInKiosk = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-fire-red to-fire-orange">
-      {/* Announcement Banner */}
-      <AnnouncementBanner />
+    <>
+      {/* Screensaver */}
+      {showScreensaver && <Screensaver onActivity={handleScreensaverActivity} />}
+      
+      <div className="min-h-screen bg-gradient-to-br from-fire-red to-fire-orange">
+        {/* News Banner */}
+        <NewsBanner />
+        
+        {/* Announcement Banner */}
+        <AnnouncementBanner />
       
       <div className="p-4">
         <div className="max-w-7xl mx-auto">
@@ -615,7 +660,7 @@ const CheckInKiosk = () => {
         )}
         </div>
       </div>
-    </div>
+    </>
   );
 };
 

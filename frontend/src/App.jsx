@@ -10,6 +10,8 @@ import FireStationSettings from './components/Admin/FireStationSettings';
 import BackupSettings from './components/Admin/BackupSettings';
 import SystemSettings from './components/Admin/SystemSettings';
 import AnnouncementManager from './components/Admin/AnnouncementManager';
+import NewsManager from './components/Admin/NewsManager';
+import LiveDashboard from './components/Admin/LiveDashboard';
 
 function App() {
   return (
@@ -26,6 +28,8 @@ function App() {
           <Route path="sessions/:sessionId" element={<SessionDetails />} />
           <Route path="personnel" element={<PersonnelManagement />} />
           <Route path="announcements" element={<AnnouncementManager />} />
+          <Route path="news" element={<NewsManager />} />
+          <Route path="dashboard" element={<LiveDashboard />} />
           <Route path="settings/firestation" element={<FireStationSettings />} />
           <Route path="settings/system" element={<SystemSettings />} />
           <Route path="settings/backup" element={<BackupSettings />} />
