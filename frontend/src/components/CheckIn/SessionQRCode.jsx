@@ -4,12 +4,17 @@ import api from '../../api';
 const SessionQRCode = ({ sessionId }) => {
   const [qrUrl, setQrUrl] = useState('');
   const [loading, setLoading] = useState(true);
+  const [retryCount, setRetryCount] = useState(0);
+  const MAX_RETRIES = 3;
 
   useEffect(() => {
     if (sessionId) {
       loadQRCode();
       // Refresh QR code every 5 minutes
-      const interval = setInterval(loadQRCode, 5 * 60 * 1000);
+      const interval = setInterval(() => {
+        setRetryCount(0); // Reset retry count on scheduled refresh
+        loadQRCode();
+      }, 5 * 60 * 1000);
       return () => clearInterval(interval);
     }
   }, [sessionId]);
@@ -64,6 +69,17 @@ const SessionQRCode = ({ sessionId }) => {
     printWindow.document.close();
   };
 
+  const handleImageError = () => {
+    console.error('Failed to load QR code');
+    if (retryCount < MAX_RETRIES) {
+      setRetryCount(prev => prev + 1);
+      setLoading(true);
+      // Exponential backoff: 2s, 4s, 8s
+      const delay = Math.pow(2, retryCount) * 1000;
+      setTimeout(loadQRCode, delay);
+    }
+  };
+
   if (loading) {
     return (
       <div className="flex justify-center items-center p-8">
@@ -79,11 +95,7 @@ const SessionQRCode = ({ sessionId }) => {
           src={qrUrl} 
           alt="Session QR Code" 
           className="w-64 h-64 sm:w-80 sm:h-80 lg:w-96 lg:h-96"
-          onError={() => {
-            console.error('Failed to load QR code');
-            setLoading(true);
-            setTimeout(loadQRCode, 2000);
-          }}
+          onError={handleImageError}
         />
       </div>
       

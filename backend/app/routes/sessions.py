@@ -8,8 +8,6 @@ from ..models import Session as SessionModel, Attendance, Personnel, AdminUser, 
 from ..utils.auth import get_current_user, decode_token
 from ..utils.permissions import check_permission
 from ..services.session_manager import SessionManager
-from ..services.qr_generator import QRGenerator
-from fastapi.responses import Response
 
 router = APIRouter(prefix="/api/sessions", tags=["sessions"])
 
@@ -233,21 +231,3 @@ async def get_active_sessions(db: Session = Depends(get_db)):
         })
     
     return result
-
-@router.get("/{session_id}/qr")
-async def get_session_qr_code(
-    session_id: int,
-    db: Session = Depends(get_db)
-):
-    """Generate QR code for session check-in (no auth required for kiosk)"""
-    session = db.query(SessionModel).filter(SessionModel.id == session_id).first()
-    if not session:
-        raise HTTPException(status_code=404, detail="Session nicht gefunden")
-    
-    if not session.is_active:
-        raise HTTPException(status_code=400, detail="Session ist nicht aktiv")
-    
-    # Generate QR code
-    qr_bytes = QRGenerator.generate_qr_code(session_id)
-    
-    return Response(content=qr_bytes, media_type="image/png")

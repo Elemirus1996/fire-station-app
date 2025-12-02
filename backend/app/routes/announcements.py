@@ -31,12 +31,20 @@ async def get_active_announcements(db: Session = Depends(get_db)):
     """Get all currently active announcements (no auth required for kiosk)"""
     now = datetime.utcnow()
     
+    # Define priority order for sorting
+    from sqlalchemy import case
+    priority_order = case(
+        (Announcement.priority == 'urgent', 1),
+        (Announcement.priority == 'high', 2),
+        (Announcement.priority == 'normal', 3),
+        else_=4
+    )
+    
     announcements = db.query(Announcement).filter(
         Announcement.valid_from <= now,
         (Announcement.valid_until == None) | (Announcement.valid_until >= now)
     ).order_by(
-        # Order by priority: urgent first, then high, then normal
-        Announcement.priority.desc(),
+        priority_order,
         Announcement.created_at.desc()
     ).all()
     
