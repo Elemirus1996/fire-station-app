@@ -132,6 +132,5 @@ const SessionQRCode = ({ sessionId, large = false }) => {
     </div>
   );
 };
-};
 
 export default SessionQRCode;
