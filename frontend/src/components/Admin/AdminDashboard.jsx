@@ -93,6 +93,16 @@ const AdminDashboard = () => {
               >
                 👥 Personal
               </Link>
+              <Link
+                to="/admin/announcements"
+                className={`block px-4 py-2 rounded-lg transition-all ${
+                  isActive('/admin/announcements')
+                    ? 'bg-fire-red text-white'
+                    : 'hover:bg-gray-100'
+                }`}
+              >
+                📢 Schwarzes Brett
+              </Link>
               
               <div className="border-t pt-2 mt-2">
                 <div className="text-xs text-gray-500 px-4 py-2 font-semibold">
