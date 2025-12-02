@@ -119,6 +119,16 @@ const AdminDashboard = () => {
                   🏢 Feuerwache
                 </Link>
                 <Link
+                  to="/admin/settings/system"
+                  className={`block px-4 py-2 rounded-lg transition-all ${
+                    isActive('/admin/settings/system')
+                      ? 'bg-fire-red text-white'
+                      : 'hover:bg-gray-100'
+                  }`}
+                >
+                  ⚙️ System
+                </Link>
+                <Link
                   to="/admin/settings/backup"
                   className={`block px-4 py-2 rounded-lg transition-all ${
                     isActive('/admin/settings/backup')

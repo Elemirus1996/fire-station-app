@@ -16,8 +16,12 @@ const CheckInKiosk = () => {
   const [showSessionSelect, setShowSessionSelect] = useState(true);
   const [showEndSessionModal, setShowEndSessionModal] = useState(false);
   const [endSessionNumber, setEndSessionNumber] = useState('');
+  const [systemSettings, setSystemSettings] = useState(null);
 
   useEffect(() => {
+    // Load system settings
+    loadSystemSettings();
+    
     if (qrToken) {
       // Validate QR token and get session
       validateQRToken();
@@ -33,6 +37,19 @@ const CheckInKiosk = () => {
       return () => clearInterval(interval);
     }
   }, [selectedSession]);
+
+  const loadSystemSettings = async () => {
+    try {
+      const response = await api.get('/settings/system');
+      setSystemSettings(response.data);
+    } catch (error) {
+      console.error('Fehler beim Laden der System-Einstellungen:', error);
+      // Set defaults if loading fails
+      setSystemSettings({
+        kiosk_show_attendance_list: true
+      });
+    }
+  };
 
   const validateQRToken = async () => {
     try {
@@ -280,10 +297,27 @@ const CheckInKiosk = () => {
             </div>
           </div>
 
-          {/* QR Code Section - Prominent Display */}
-          <div className="mb-4 flex justify-center">
-            <div className="bg-transparent p-8">
-              <SessionQRCode sessionId={selectedSession?.id} />
+          {/* QR Code Section - Size depends on settings */}
+          <div className={`mb-4 flex justify-center ${
+            systemSettings?.kiosk_show_attendance_list ? '' : 'py-8'
+          }`}>
+            <div className={`bg-transparent ${
+              systemSettings?.kiosk_show_attendance_list ? 'p-4' : 'p-8'
+            }`}>
+              <SessionQRCode 
+                sessionId={selectedSession?.id}
+                large={!systemSettings?.kiosk_show_attendance_list}
+              />
+              {!systemSettings?.kiosk_show_attendance_list && (
+                <div className="text-center mt-6">
+                  <p className="text-2xl font-bold text-white">
+                    📱 QR-Code scannen zum Check-in
+                  </p>
+                  <p className="text-xl text-white opacity-90 mt-2">
+                    mit dem Smartphone
+                  </p>
+                </div>
+              )}
             </div>
           </div>
 
@@ -294,7 +328,9 @@ const CheckInKiosk = () => {
             <div className="flex-1 border-t-2 border-white opacity-50"></div>
           </div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+          <div className={`grid gap-4 ${
+            systemSettings?.kiosk_show_attendance_list ? 'grid-cols-1 lg:grid-cols-2' : 'grid-cols-1 max-w-2xl mx-auto'
+          }`}>
             {/* Keypad Section */}
             <div className="bg-white rounded-3xl shadow-2xl p-8">
               <h2 className="text-2xl font-bold text-fire-red mb-6">Stammrollennummer eingeben</h2>
@@ -347,26 +383,27 @@ const CheckInKiosk = () => {
             </div>
           </div>
 
-          {/* Active Personnel Section */}
-          <div className="bg-white rounded-3xl shadow-2xl p-8">
-            <h2 className="text-2xl font-bold text-fire-red mb-6">
-              Aktuell anwesend ({activePersonnel.length})
-            </h2>
-            <div className="space-y-3 max-h-[600px] overflow-y-auto">
-              {activePersonnel.length === 0 ? (
-                <p className="text-gray-500 text-center py-8">Noch niemand eingecheckt</p>
-              ) : (
-                activePersonnel.map((person) => (
-                  <div
-                    key={person.attendance_id}
-                    className="bg-gray-50 rounded-xl p-4 flex justify-between items-center hover:bg-gray-100 transition-all"
-                  >
-                    <div>
-                      <div className="font-bold text-lg text-fire-red">
-                        {person.vorname} {person.nachname}
-                      </div>
-                      <div className="text-sm text-gray-600">
-                        {person.dienstgrad_name} • Nr. {person.stammrollennummer}
+          {/* Active Personnel Section - Conditional */}
+          {systemSettings?.kiosk_show_attendance_list && (
+            <div className="bg-white rounded-3xl shadow-2xl p-8">
+              <h2 className="text-2xl font-bold text-fire-red mb-6">
+                Aktuell anwesend ({activePersonnel.length})
+              </h2>
+              <div className="space-y-3 max-h-[600px] overflow-y-auto">
+                {activePersonnel.length === 0 ? (
+                  <p className="text-gray-500 text-center py-8">Noch niemand eingecheckt</p>
+                ) : (
+                  activePersonnel.map((person) => (
+                    <div
+                      key={person.attendance_id}
+                      className="bg-gray-50 rounded-xl p-4 flex justify-between items-center hover:bg-gray-100 transition-all"
+                    >
+                      <div>
+                        <div className="font-bold text-lg text-fire-red">
+                          {person.vorname} {person.nachname}
+                        </div>
+                        <div className="text-sm text-gray-600">
+                          {person.dienstgrad_name} • Nr. {person.stammrollennummer}
                       </div>
                     </div>
                     <div className="text-sm text-gray-500">
@@ -380,6 +417,7 @@ const CheckInKiosk = () => {
               )}
             </div>
           </div>
+          )}
         </div>
 
         {/* End Session Modal */}
