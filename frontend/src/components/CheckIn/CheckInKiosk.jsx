@@ -271,8 +271,12 @@ const CheckInKiosk = () => {
 
   if (showSessionSelect && sessions.length > 1) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-fire-red to-fire-orange flex items-center justify-center p-8">
-        <div className="bg-white rounded-3xl shadow-2xl p-12 max-w-4xl w-full">
+      <div className="min-h-screen bg-gradient-to-br from-fire-red to-fire-orange">
+        {/* News Banner */}
+        <NewsBanner />
+        
+        <div className="flex items-center justify-center p-8 min-h-screen">
+          <div className="bg-white rounded-3xl shadow-2xl p-12 max-w-4xl w-full">
           <h1 className="text-4xl font-bold text-fire-red text-center mb-8">
             Session auswählen
           </h1>
@@ -297,6 +301,7 @@ const CheckInKiosk = () => {
             ))}
           </div>
         </div>
+        </div>
       </div>
     );
   }
@@ -305,6 +310,9 @@ const CheckInKiosk = () => {
   if (isMobileQRView && selectedSession) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-fire-red to-fire-orange">
+        {/* News Banner */}
+        <NewsBanner />
+        
         {/* Announcement Banner */}
         <AnnouncementBanner />
         
