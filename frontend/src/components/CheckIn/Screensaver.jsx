@@ -32,13 +32,14 @@ const Screensaver = ({ onActivity }) => {
   return (
     <div
       onClick={handleClick}
+      onTouchStart={handleClick}
       className="fixed inset-0 bg-gradient-to-br from-fire-red via-red-800 to-fire-orange z-50 flex flex-col items-center justify-center cursor-pointer animate-fadeIn"
     >
       {/* Logo */}
       {systemSettings?.screensaver_show_logo && fireStationInfo?.logo_path && (
         <div className="mb-12 animate-pulse">
           <img
-            src={`/uploads/${fireStationInfo.logo_path}`}
+            src={fireStationInfo.logo_path.startsWith('/') ? fireStationInfo.logo_path : `/uploads/logo/${fireStationInfo.logo_path.split('/').pop()}`}
             alt="Feuerwehr Logo"
             className="h-48 w-auto drop-shadow-2xl"
             onError={(e) => e.target.style.display = 'none'}

@@ -213,11 +213,10 @@ async def get_system_settings(db: Session = Depends(get_db)):
     return {
         "kiosk_base_url": settings.kiosk_base_url,
         "kiosk_show_attendance_list": settings.kiosk_show_attendance_list,
-        "screensaver_enabled": settings.screensaver_enabled if hasattr(settings, 'screensaver_enabled') else True,
-        "screensaver_timeout": settings.screensaver_timeout if hasattr(settings, 'screensaver_timeout') else 300,
-        "screensaver_show_logo": settings.screensaver_show_logo if hasattr(settings, 'screensaver_show_logo') else True,
-        "screensaver_show_clock": settings.screensaver_show_clock if hasattr(settings, 'screensaver_show_clock') else True,
-        "kiosk_show_attendance_list": settings.kiosk_show_attendance_list
+        "screensaver_enabled": getattr(settings, 'screensaver_enabled', True),
+        "screensaver_timeout": getattr(settings, 'screensaver_timeout', 300),
+        "screensaver_show_logo": getattr(settings, 'screensaver_show_logo', True),
+        "screensaver_show_clock": getattr(settings, 'screensaver_show_clock', True)
     }
 
 @router.put("/system")
