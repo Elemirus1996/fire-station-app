@@ -332,6 +332,11 @@ const SessionManagement = () => {
                   <div className="text-sm text-gray-600 mt-1">
                     Begonnen: {new Date(session.started_at).toLocaleString('de-DE')}
                   </div>
+                  {session.duration_seconds && (
+                    <div className="text-sm text-gray-600">
+                      Dauer: {Math.floor(session.duration_seconds / 3600)}h {Math.floor((session.duration_seconds % 3600) / 60)}m
+                    </div>
+                  )}
                   <div className="text-sm text-gray-600">
                     Teilnehmer: {session.active_attendees} aktiv / {session.total_attendees} gesamt
                   </div>
@@ -388,6 +393,11 @@ const SessionManagement = () => {
                     {new Date(session.started_at).toLocaleString('de-DE')} - {' '}
                     {session.ended_at ? new Date(session.ended_at).toLocaleString('de-DE') : ''}
                   </div>
+                  {session.duration_seconds && (
+                    <div className="text-sm text-gray-600">
+                      Dauer: {Math.floor(session.duration_seconds / 3600)}h {Math.floor((session.duration_seconds % 3600) / 60)}m
+                    </div>
+                  )}
                   <div className="text-sm text-gray-600">
                     Teilnehmer: {session.total_attendees}
                   </div>

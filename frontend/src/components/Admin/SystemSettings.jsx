@@ -4,7 +4,11 @@ import api from '../../api';
 const SystemSettings = () => {
   const [settings, setSettings] = useState({
     kiosk_base_url: 'http://localhost:5173',
-    kiosk_show_attendance_list: true
+    kiosk_show_attendance_list: true,
+    screensaver_enabled: true,
+    screensaver_timeout: 300,
+    screensaver_show_logo: true,
+    screensaver_show_clock: true
   });
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -157,6 +161,86 @@ const SystemSettings = () => {
                   Dies verbessert die Scan-Erfahrung, besonders wenn viele Personen den QR-Code nutzen.
                 </p>
               </label>
+            </div>
+          </div>
+
+          {/* Screensaver Settings */}
+          <div className="border-t pt-6">
+            <h3 className="text-lg font-semibold text-gray-800 mb-4">🖥️ Bildschirmschoner</h3>
+            
+            <div className="space-y-4">
+              {/* Enable Screensaver */}
+              <div className="flex items-start space-x-3">
+                <input 
+                  type="checkbox"
+                  id="screensaver-enabled"
+                  checked={settings.screensaver_enabled}
+                  onChange={(e) => setSettings({...settings, screensaver_enabled: e.target.checked})}
+                  className="w-5 h-5 mt-0.5 text-fire-red rounded focus:ring-fire-red"
+                />
+                <label htmlFor="screensaver-enabled" className="flex-1">
+                  <span className="text-sm font-medium text-gray-700 block mb-1">
+                    Bildschirmschoner aktivieren
+                  </span>
+                  <p className="text-sm text-gray-600">
+                    Zeigt nach einer gewissen Inaktivität einen Bildschirmschoner im Kiosk-Modus an.
+                  </p>
+                </label>
+              </div>
+
+              {settings.screensaver_enabled && (
+                <>
+                  {/* Timeout */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Inaktivitäts-Timeout (Sekunden)
+                    </label>
+                    <input 
+                      type="number"
+                      min="30"
+                      max="3600"
+                      value={settings.screensaver_timeout}
+                      onChange={(e) => setSettings({...settings, screensaver_timeout: parseInt(e.target.value) || 300})}
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-fire-red focus:border-transparent"
+                    />
+                    <p className="text-xs text-gray-500 mt-1">
+                      Nach dieser Zeit ohne Aktivität wird der Bildschirmschoner angezeigt (Standard: 300 Sekunden = 5 Minuten)
+                    </p>
+                  </div>
+
+                  {/* Show Logo */}
+                  <div className="flex items-start space-x-3">
+                    <input 
+                      type="checkbox"
+                      id="screensaver-logo"
+                      checked={settings.screensaver_show_logo}
+                      onChange={(e) => setSettings({...settings, screensaver_show_logo: e.target.checked})}
+                      className="w-5 h-5 mt-0.5 text-fire-red rounded focus:ring-fire-red"
+                    />
+                    <label htmlFor="screensaver-logo" className="flex-1">
+                      <span className="text-sm font-medium text-gray-700 block">
+                        Logo anzeigen
+                      </span>
+                    </label>
+                  </div>
+
+                  {/* Show Clock */}
+                  <div className="flex items-start space-x-3">
+                    <input 
+                      type="checkbox"
+                      id="screensaver-clock"
+                      checked={settings.screensaver_show_clock}
+                      onChange={(e) => setSettings({...settings, screensaver_show_clock: e.target.checked})}
+                      className="w-5 h-5 mt-0.5 text-fire-red rounded focus:ring-fire-red"
+                    />
+                    <label htmlFor="screensaver-clock" className="flex-1">
+                      <span className="text-sm font-medium text-gray-700 block">
+                        Uhrzeit anzeigen
+                      </span>
+                    </label>
+                  </div>
+                </>
+              )}
             </div>
           </div>
 
