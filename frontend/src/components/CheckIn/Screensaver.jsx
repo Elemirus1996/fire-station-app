@@ -25,15 +25,23 @@ const Screensaver = ({ onActivity }) => {
     }
   };
 
-  const handleClick = () => {
-    if (onActivity) onActivity();
+  const handleActivity = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (onActivity) {
+      onActivity();
+    }
   };
 
   return (
     <div
-      onClick={handleClick}
-      onTouchStart={handleClick}
-      className="fixed inset-0 bg-gradient-to-br from-fire-red via-red-800 to-fire-orange z-50 flex flex-col items-center justify-center cursor-pointer animate-fadeIn"
+      onClick={handleActivity}
+      onTouchStart={handleActivity}
+      onMouseDown={handleActivity}
+      onKeyDown={handleActivity}
+      tabIndex={0}
+      className="fixed inset-0 bg-gradient-to-br from-fire-red via-red-800 to-fire-orange z-[9999] flex flex-col items-center justify-center cursor-pointer animate-fadeIn"
+      style={{ isolation: 'isolate' }}
     >
       {/* Logo */}
       {systemSettings?.screensaver_show_logo && fireStationInfo?.logo_path && (

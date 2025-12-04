@@ -48,14 +48,8 @@ const CheckInKiosk = () => {
   // Screensaver inactivity detection
   useEffect(() => {
     if (!systemSettings?.screensaver_enabled || isMobileQRView) {
-      console.log('Screensaver disabled:', { 
-        enabled: systemSettings?.screensaver_enabled, 
-        isMobileQRView 
-      });
       return;
     }
-
-    console.log('Screensaver enabled with timeout:', systemSettings.screensaver_timeout);
 
     const resetTimer = () => {
       if (inactivityTimerRef.current) {
@@ -64,19 +58,17 @@ const CheckInKiosk = () => {
       setShowScreensaver(false);
       
       const timeout = (systemSettings?.screensaver_timeout || 300) * 1000;
-      console.log('Screensaver timer reset, will activate in', timeout / 1000, 'seconds');
       inactivityTimerRef.current = setTimeout(() => {
-        console.log('Activating screensaver');
         setShowScreensaver(true);
       }, timeout);
     };
 
-    const events = ['mousedown', 'mousemove', 'keypress', 'scroll', 'touchstart', 'click'];
-    events.forEach(event => document.addEventListener(event, resetTimer));
+    const events = ['mousedown', 'mousemove', 'keydown', 'scroll', 'touchstart'];
+    events.forEach(event => window.addEventListener(event, resetTimer, { passive: true }));
     resetTimer();
 
     return () => {
-      events.forEach(event => document.removeEventListener(event, resetTimer));
+      events.forEach(event => window.removeEventListener(event, resetTimer));
       if (inactivityTimerRef.current) {
         clearTimeout(inactivityTimerRef.current);
       }
