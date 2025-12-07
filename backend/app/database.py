@@ -3,7 +3,15 @@ from sqlalchemy.orm import sessionmaker, Session
 from .models import Base
 import os
 
-DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///./fire_station.db")
+# Ensure absolute path for SQLite database
+if "DATABASE_URL" in os.environ:
+    DATABASE_URL = os.environ["DATABASE_URL"]
+else:
+    # Default: Use absolute path in backend directory
+    backend_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    db_path = os.path.join(backend_dir, "fire_station.db")
+    DATABASE_URL = f"sqlite:///{db_path}"
+    print(f"Using database at: {db_path}")
 
 engine = create_engine(
     DATABASE_URL,

@@ -446,11 +446,20 @@ Type=simple
 User=root
 WorkingDirectory=$INSTALL_DIR/backend
 Environment="PATH=$INSTALL_DIR/backend/venv/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
+Environment="DATABASE_URL=sqlite:///$INSTALL_DIR/backend/fire_station.db"
+Environment="PYTHONUNBUFFERED=1"
 ExecStart=$INSTALL_DIR/backend/venv/bin/python main.py
 Restart=always
 RestartSec=10
 StandardOutput=journal
 StandardError=journal
+
+# Ensure database directory is writable
+PermissionsStartOnly=true
+ExecStartPre=/bin/mkdir -p $INSTALL_DIR/backend
+ExecStartPre=/bin/chmod 775 $INSTALL_DIR/backend
+ExecStartPre=/bin/touch $INSTALL_DIR/backend/fire_station.db
+ExecStartPre=/bin/chmod 664 $INSTALL_DIR/backend/fire_station.db
 
 [Install]
 WantedBy=multi-user.target
