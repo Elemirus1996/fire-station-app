@@ -12,6 +12,7 @@ import SystemSettings from './components/Admin/SystemSettings';
 import AnnouncementManager from './components/Admin/AnnouncementManager';
 import NewsManager from './components/Admin/NewsManager';
 import LiveDashboard from './components/Admin/LiveDashboard';
+import ScreensaverDebugTest from './components/CheckIn/ScreensaverDebugTest';
 
 function App() {
   return (
@@ -20,6 +21,7 @@ function App() {
         <Route path="/" element={<Navigate to="/kiosk" replace />} />
         <Route path="/kiosk" element={<CheckInKiosk />} />
         <Route path="/checkin" element={<CheckInKiosk />} />
+        <Route path="/test-screensaver" element={<ScreensaverDebugTest />} />
         
         <Route path="/admin/login" element={<AdminLogin />} />
         <Route path="/admin" element={<AdminDashboard />}>

@@ -47,9 +47,17 @@ const CheckInKiosk = () => {
 
   // Screensaver inactivity detection
   useEffect(() => {
+    console.log('🔍 Screensaver Effect triggered');
+    console.log('  - screensaver_enabled:', systemSettings?.screensaver_enabled);
+    console.log('  - isMobileQRView:', isMobileQRView);
+    console.log('  - timeout:', systemSettings?.screensaver_timeout);
+
     if (!systemSettings?.screensaver_enabled || isMobileQRView) {
+      console.log('❌ Screensaver DISABLED');
       return;
     }
+
+    console.log('✅ Screensaver ENABLED - Setting up timer');
 
     const resetTimer = () => {
       if (inactivityTimerRef.current) {
@@ -58,7 +66,9 @@ const CheckInKiosk = () => {
       setShowScreensaver(false);
       
       const timeout = (systemSettings?.screensaver_timeout || 300) * 1000;
+      console.log(`⏱️  Timer set for ${timeout / 1000} seconds`);
       inactivityTimerRef.current = setTimeout(() => {
+        console.log('🖥️  ACTIVATING SCREENSAVER NOW!');
         setShowScreensaver(true);
       }, timeout);
     };
@@ -66,11 +76,18 @@ const CheckInKiosk = () => {
     // Nur echte Interaktionen zählen - NICHT mousemove!
     // mousemove würde den Timer bei jeder kleinsten Bewegung zurücksetzen
     const events = ['mousedown', 'keydown', 'touchstart', 'click'];
-    events.forEach(event => window.addEventListener(event, resetTimer, { passive: true }));
+    
+    const resetWithLog = (e) => {
+      console.log(`🔄 Timer reset by: ${e.type}`);
+      resetTimer();
+    };
+    
+    events.forEach(event => window.addEventListener(event, resetWithLog, { passive: true }));
     resetTimer();
 
     return () => {
-      events.forEach(event => window.removeEventListener(event, resetTimer));
+      console.log('🧹 Cleaning up screensaver effect');
+      events.forEach(event => window.removeEventListener(event, resetWithLog));
       if (inactivityTimerRef.current) {
         clearTimeout(inactivityTimerRef.current);
       }
