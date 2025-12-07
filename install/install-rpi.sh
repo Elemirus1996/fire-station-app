@@ -381,14 +381,13 @@ cd $INSTALL_DIR/frontend
 
 # Umgebungsvariable für Backend-URL setzen
 print_info "Konfiguriere Backend-URL: http://${IP_ADDRESS}:8000"
-cat > .env << EOF
+cat > .env.production << EOF
+VITE_API_URL=http://${IP_ADDRESS}:8000/api
 VITE_API_BASE_URL=http://${IP_ADDRESS}:8000
 EOF
 
-# Auch in .env.production
-cat > .env.production << EOF
-VITE_API_BASE_URL=http://${IP_ADDRESS}:8000
-EOF
+# Kopiere für Build-Prozess
+cp .env.production .env
 
 # Node modules installieren
 print_info "Installiere Node.js Dependencies (das kann einige Minuten dauern)..."

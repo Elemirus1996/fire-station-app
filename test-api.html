@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>API Test - Personnel</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1200px;
+            margin: 20px auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        button {
+            background: #dc2626;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover {
+            background: #b91c1c;
+        }
+        #result {
+            margin-top: 20px;
+            padding: 10px;
+            background: #f9f9f9;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            white-space: pre-wrap;
+            font-family: monospace;
+        }
+        .error {
+            color: #dc2626;
+            background: #fee;
+            border-color: #fcc;
+        }
+        .success {
+            color: #059669;
+            background: #d1fae5;
+            border-color: #a7f3d0;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        th, td {
+            padding: 8px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+        th {
+            background: #dc2626;
+            color: white;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔥 Feuerwehr API Test</h1>
+        
+        <div>
+            <h3>API Base URL:</h3>
+            <input type="text" id="apiUrl" value="http://192.168.178.250:8000/api" style="width: 400px; padding: 8px;">
+        </div>
+        
+        <div style="margin-top: 20px;">
+            <button onclick="testPersonnel()">📋 Test GET /personnel</button>
+            <button onclick="testPersonnelActive()">✓ Test GET /personnel (active only)</button>
+            <button onclick="testGroups()">👥 Test GET /groups</button>
+            <button onclick="testFireStation()">🏢 Test GET /firestation</button>
+        </div>
+        
+        <div id="result"></div>
+        <div id="table"></div>
+    </div>
+
+    <script>
+        function getApiUrl() {
+            return document.getElementById('apiUrl').value;
+        }
+
+        function showResult(data, success = true) {
+            const resultDiv = document.getElementById('result');
+            resultDiv.className = success ? 'success' : 'error';
+            resultDiv.textContent = JSON.stringify(data, null, 2);
+        }
+
+        function showTable(personnel) {
+            const tableDiv = document.getElementById('table');
+            if (!Array.isArray(personnel) || personnel.length === 0) {
+                tableDiv.innerHTML = '<p>Keine Daten</p>';
+                return;
+            }
+
+            let html = '<table><thead><tr>';
+            html += '<th>ID</th><th>Stammnr.</th><th>Vorname</th><th>Nachname</th>';
+            html += '<th>Dienstgrad</th><th>Gruppe</th><th>Aktiv</th></tr></thead><tbody>';
+            
+            personnel.forEach(p => {
+                html += '<tr>';
+                html += `<td>${p.id}</td>`;
+                html += `<td>${p.stammrollennummer}</td>`;
+                html += `<td>${p.vorname}</td>`;
+                html += `<td>${p.nachname}</td>`;
+                html += `<td>${p.dienstgrad} (${p.dienstgrad_name})</td>`;
+                html += `<td>${p.group_id || '-'}</td>`;
+                html += `<td>${p.is_active ? '✓' : '✗'}</td>`;
+                html += '</tr>';
+            });
+            
+            html += '</tbody></table>';
+            tableDiv.innerHTML = html;
+        }
+
+        async function testPersonnel() {
+            try {
+                const response = await fetch(`${getApiUrl()}/personnel?active_only=false`);
+                const data = await response.json();
+                showResult({ 
+                    status: response.status, 
+                    count: data.length,
+                    data: data 
+                }, response.ok);
+                if (response.ok) {
+                    showTable(data);
+                }
+            } catch (error) {
+                showResult({ error: error.message }, false);
+            }
+        }
+
+        async function testPersonnelActive() {
+            try {
+                const response = await fetch(`${getApiUrl()}/personnel?active_only=true`);
+                const data = await response.json();
+                showResult({ 
+                    status: response.status, 
+                    count: data.length,
+                    data: data 
+                }, response.ok);
+                if (response.ok) {
+                    showTable(data);
+                }
+            } catch (error) {
+                showResult({ error: error.message }, false);
+            }
+        }
+
+        async function testGroups() {
+            try {
+                const response = await fetch(`${getApiUrl()}/groups`);
+                const data = await response.json();
+                showResult({ 
+                    status: response.status, 
+                    count: data.length,
+                    data: data 
+                }, response.ok);
+                document.getElementById('table').innerHTML = '';
+            } catch (error) {
+                showResult({ error: error.message }, false);
+            }
+        }
+
+        async function testFireStation() {
+            try {
+                const response = await fetch(`${getApiUrl()}/settings/firestation`);
+                const data = await response.json();
+                showResult({ 
+                    status: response.status, 
+                    data: data 
+                }, response.ok);
+                document.getElementById('table').innerHTML = '';
+            } catch (error) {
+                showResult({ error: error.message }, false);
+            }
+        }
+
+        // Auto-test on load
+        window.onload = () => {
+            testPersonnel();
+        };
+    </script>
+</body>
+</html>
