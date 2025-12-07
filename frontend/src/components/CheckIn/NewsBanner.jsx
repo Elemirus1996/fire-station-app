@@ -30,45 +30,14 @@ const NewsBanner = () => {
     }
   };
 
-  const getPriorityStyles = (priority) => {
-    switch (priority) {
-      case 'urgent':
-        return 'bg-red-600 border-red-700';
-      case 'high':
-        return 'bg-orange-500 border-orange-600';
-      case 'normal':
-        return 'bg-blue-600 border-blue-700';
-      case 'low':
-        return 'bg-gray-600 border-gray-700';
-      default:
-        return 'bg-blue-600 border-blue-700';
-    }
-  };
-
-  const getPriorityIcon = (priority) => {
-    switch (priority) {
-      case 'urgent':
-        return '🚨';
-      case 'high':
-        return '⚠️';
-      case 'normal':
-        return 'ℹ️';
-      case 'low':
-        return '📌';
-      default:
-        return 'ℹ️';
-    }
-  };
-
   if (news.length === 0) return null;
 
   const currentNews = news[currentIndex];
 
   return (
-    <div className={`${getPriorityStyles(currentNews.priority)} border-b-4 text-white p-4 shadow-lg`}>
+    <div className="bg-blue-600 border-b-4 border-blue-700 text-white p-4 shadow-lg">
       <div className="max-w-7xl mx-auto">
         <div className="flex items-start space-x-3">
-          <div className="text-2xl flex-shrink-0">{getPriorityIcon(currentNews.priority)}</div>
           <div className="flex-1 min-w-0">
             <div className="flex items-center space-x-2 mb-1">
               <h3 className="text-lg font-bold truncate">{currentNews.title}</h3>

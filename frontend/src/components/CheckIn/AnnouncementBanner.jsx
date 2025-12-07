@@ -33,30 +33,6 @@ const AnnouncementBanner = () => {
     }
   };
 
-  const getPriorityColor = (priority) => {
-    switch (priority) {
-      case 'urgent':
-        return 'bg-red-600 text-white';
-      case 'high':
-        return 'bg-yellow-500 text-black';
-      case 'normal':
-      default:
-        return 'bg-blue-600 text-white';
-    }
-  };
-
-  const getPriorityIcon = (priority) => {
-    switch (priority) {
-      case 'urgent':
-        return '🚨';
-      case 'high':
-        return '⚠️';
-      case 'normal':
-      default:
-        return 'ℹ️';
-    }
-  };
-
   if (announcements.length === 0) {
     return null;
   }
@@ -64,12 +40,9 @@ const AnnouncementBanner = () => {
   const currentAnnouncement = announcements[currentIndex];
 
   return (
-    <div className={`${getPriorityColor(currentAnnouncement.priority)} py-3 px-4 shadow-lg`}>
+    <div className="bg-blue-600 text-white py-3 px-4 shadow-lg">
       <div className="max-w-7xl mx-auto flex items-center justify-between">
         <div className="flex items-center space-x-3 flex-1 min-w-0">
-          <span className="text-2xl flex-shrink-0">
-            {getPriorityIcon(currentAnnouncement.priority)}
-          </span>
           <div className="flex-1 min-w-0">
             <div className="font-bold text-lg truncate">
               {currentAnnouncement.title}
