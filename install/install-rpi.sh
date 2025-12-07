@@ -6,11 +6,20 @@
 # Automatische Installation und Konfiguration
 #############################################
 
-set -e  # Exit on error
+# Exit on error, but allow error handling
+set -e
+set -o pipefail
+
+# Log-Datei erstellen
+LOGFILE="/tmp/feuerwehr-install.log"
+exec 1> >(tee -a "$LOGFILE")
+exec 2>&1
 
 echo "=================================================="
 echo "🚒 Feuerwehr Anwesenheitssystem - Installation"
 echo "=================================================="
+echo ""
+echo "Log wird gespeichert in: $LOGFILE"
 echo ""
 
 # Farben für Output
@@ -50,19 +59,79 @@ echo ""
 
 # 2. Notwendige Pakete installieren
 print_info "Schritt 2/10: Notwendige Pakete werden installiert..."
-apt-get install -y \
-    python3 \
-    python3-pip \
-    python3-venv \
-    nodejs \
-    npm \
-    git \
-    chromium-browser \
-    unclutter \
-    xdotool \
-    x11-xserver-utils \
-    sqlite3
-print_success "Pakete installiert"
+
+# Pakete einzeln prüfen und installieren
+install_package() {
+    local package=$1
+    if dpkg -l | grep -q "^ii  $package"; then
+        print_info "$package bereits installiert - überspringe"
+        return 0
+    fi
+    
+    print_info "Installiere $package..."
+    if apt-get install -y "$package" 2>&1 | tee -a "$LOGFILE"; then
+        print_success "$package installiert"
+        return 0
+    else
+        print_error "Warnung: $package konnte nicht installiert werden"
+        return 1
+    fi
+}
+
+# Basis-Pakete
+install_package python3
+install_package python3-pip
+install_package python3-venv
+install_package git
+install_package sqlite3
+install_package unclutter
+install_package xdotool
+install_package x11-xserver-utils
+
+# Node.js und npm
+if ! command -v node &> /dev/null; then
+    print_info "Installiere Node.js..."
+    if curl -fsSL https://deb.nodesource.com/setup_18.x | bash - 2>&1 | tee -a "$LOGFILE"; then
+        apt-get install -y nodejs
+        print_success "Node.js installiert"
+    else
+        print_error "Node.js Installation fehlgeschlagen"
+        exit 1
+    fi
+else
+    NODE_VERSION=$(node --version)
+    print_info "Node.js bereits installiert: $NODE_VERSION"
+fi
+
+# Chromium Browser - flexible Installation
+CHROMIUM_INSTALLED=false
+
+if command -v chromium-browser &> /dev/null; then
+    print_info "chromium-browser bereits installiert"
+    CHROMIUM_INSTALLED=true
+    CHROMIUM_CMD="chromium-browser"
+elif command -v chromium &> /dev/null; then
+    print_info "chromium bereits installiert"
+    CHROMIUM_INSTALLED=true
+    CHROMIUM_CMD="chromium"
+fi
+
+if [ "$CHROMIUM_INSTALLED" = false ]; then
+    print_info "Installiere Chromium Browser..."
+    if apt-get install -y chromium-browser 2>/dev/null; then
+        CHROMIUM_CMD="chromium-browser"
+        print_success "chromium-browser installiert"
+    elif apt-get install -y chromium 2>/dev/null; then
+        CHROMIUM_CMD="chromium"
+        print_success "chromium installiert"
+    else
+        print_error "Chromium konnte nicht automatisch installiert werden"
+        print_info "Bitte manuell installieren: sudo apt-get install chromium-browser"
+        exit 1
+    fi
+fi
+
+print_success "Alle Pakete installiert oder bereits vorhanden"
 echo ""
 
 # 3. IP-Adresse ermitteln
@@ -208,8 +277,8 @@ xset s noblank
 # Warten bis Services laufen
 sleep 10
 
-# Chromium im Kiosk-Modus starten
-chromium-browser \
+# Chromium im Kiosk-Modus starten (verwende ermittelte Chromium-Command)
+${CHROMIUM_CMD} \
     --kiosk \
     --noerrdialogs \
     --disable-infobars \
@@ -224,8 +293,8 @@ chromium-browser \
 
 # Bei Chromium-Absturz neu starten
 while true; do
-    if ! pgrep -x "chromium-browser" > /dev/null; then
-        chromium-browser --kiosk --app=http://${IP_ADDRESS}:5173/kiosk &
+    if ! pgrep -x "${CHROMIUM_CMD}" > /dev/null; then
+        ${CHROMIUM_CMD} --kiosk --app=http://${IP_ADDRESS}:5173/kiosk &
     fi
     sleep 10
 done
