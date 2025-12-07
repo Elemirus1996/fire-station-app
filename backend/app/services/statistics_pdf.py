@@ -70,13 +70,25 @@ class StatisticsPDFGenerator:
         story.append(summary_table)
         story.append(Spacer(1, 0.5*cm))
         
-        # Event types
-        story.append(Paragraph("<b>Nach Event-Typ</b>", styles['Heading2']))
-        event_data = [['Event-Typ', 'Anzahl']]
-        for event_type, count in summary['event_types'].items():
-            event_data.append([event_type, str(count)])
+        # Event types with details
+        story.append(Paragraph("<b>Teilnahme nach Event-Typ</b>", styles['Heading2']))
         
-        event_table = Table(event_data, colWidths=[10*cm, 7*cm])
+        if 'event_type_details' in summary:
+            event_data = [['Event-Typ', 'Besucht', 'Gesamt im Jahr', 'Quote']]
+            for event_type, details in summary['event_type_details'].items():
+                event_data.append([
+                    event_type,
+                    str(details['attended']),
+                    str(details['total']),
+                    f"{details['rate']}%"
+                ])
+        else:
+            # Fallback for old data format
+            event_data = [['Event-Typ', 'Anzahl']]
+            for event_type, count in summary['event_types'].items():
+                event_data.append([event_type, str(count)])
+        
+        event_table = Table(event_data, colWidths=[7*cm, 3.5*cm, 3.5*cm, 3*cm] if 'event_type_details' in summary else [10*cm, 7*cm])
         event_table.setStyle(TableStyle([
             ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#B91C1C')),
             ('TEXTCOLOR', (0, 0), (-1, 0), colors.white),

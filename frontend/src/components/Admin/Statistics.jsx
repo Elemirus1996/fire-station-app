@@ -231,12 +231,28 @@ const Statistics = () => {
 
               {/* Event Types */}
               <div className="bg-white rounded-xl shadow-md p-6">
-                <h4 className="text-xl font-bold text-gray-800 mb-4">Nach Typ</h4>
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                  {Object.entries(personnelStats.summary.event_types).map(([type, count]) => (
-                    <div key={type} className="p-4 bg-gray-100 rounded-lg">
-                      <div className="text-2xl font-bold text-fire-red">{count}</div>
-                      <div className="text-sm text-gray-600">{type}</div>
+                <h4 className="text-xl font-bold text-gray-800 mb-4">Teilnahme nach Typ</h4>
+                <div className="space-y-4">
+                  {personnelStats.summary.event_type_details && Object.entries(personnelStats.summary.event_type_details).map(([type, details]) => (
+                    <div key={type} className="border-2 border-gray-200 rounded-lg p-4">
+                      <div className="flex justify-between items-center mb-2">
+                        <span className="font-bold text-lg text-gray-800">{type}</span>
+                        <span className="text-2xl font-bold text-fire-red">{details.attended}/{details.total}</span>
+                      </div>
+                      <div className="w-full bg-gray-200 rounded-full h-6 relative overflow-hidden">
+                        <div 
+                          className="bg-gradient-to-r from-fire-red to-fire-orange h-full rounded-full transition-all duration-500"
+                          style={{ width: `${details.rate}%` }}
+                        ></div>
+                        <div className="absolute inset-0 flex items-center justify-center text-sm font-semibold">
+                          <span className={details.rate > 50 ? 'text-white' : 'text-gray-700'}>
+                            {details.rate}% Anwesenheit
+                          </span>
+                        </div>
+                      </div>
+                      <div className="mt-1 text-sm text-gray-600">
+                        Besucht: {details.attended} von {details.total} Sessions
+                      </div>
                     </div>
                   ))}
                 </div>

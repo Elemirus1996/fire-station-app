@@ -86,6 +86,39 @@ async def get_personnel_yearly_stats(
         SessionModel.started_at <= end_date
     ).count()
     
+    # Get total sessions by type in the year
+    total_sessions_by_type = {}
+    sessions_by_type = db.query(
+        SessionModel.event_type,
+        func.count(SessionModel.id).label('count')
+    ).filter(
+        SessionModel.started_at >= start_date,
+        SessionModel.started_at <= end_date
+    ).group_by(SessionModel.event_type).all()
+    
+    for row in sessions_by_type:
+        total_sessions_by_type[row.event_type] = row.count
+    
+    # Calculate attendance rates by type
+    event_type_details = {}
+    for event_type, attended_count in event_type_counts.items():
+        total_of_type = total_sessions_by_type.get(event_type, 0)
+        attendance_rate_for_type = (attended_count / total_of_type * 100) if total_of_type > 0 else 0
+        event_type_details[event_type] = {
+            "attended": attended_count,
+            "total": total_of_type,
+            "rate": round(attendance_rate_for_type, 2)
+        }
+    
+    # Add types where person didn't attend at all
+    for event_type, total in total_sessions_by_type.items():
+        if event_type not in event_type_details:
+            event_type_details[event_type] = {
+                "attended": 0,
+                "total": total,
+                "rate": 0.0
+            }
+    
     attendance_rate = (total_sessions / total_sessions_in_year * 100) if total_sessions_in_year > 0 else 0
     
     return {
@@ -101,7 +134,9 @@ async def get_personnel_yearly_stats(
             "total_sessions": total_sessions,
             "total_hours": round(total_hours, 2),
             "attendance_rate": round(attendance_rate, 2),
-            "event_types": event_type_counts
+            "event_types": event_type_counts,
+            "event_type_details": event_type_details,
+            "total_sessions_in_year": total_sessions_in_year
         },
         "monthly": [
             {
