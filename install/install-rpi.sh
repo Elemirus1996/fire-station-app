@@ -168,16 +168,66 @@ echo ""
 print_info "Schritt 6/10: Backend wird eingerichtet..."
 cd $INSTALL_DIR/backend
 
+# Zusätzliche Build-Dependencies für Python-Pakete
+print_info "Installiere Build-Dependencies..."
+apt-get install -y \
+    build-essential \
+    python3-dev \
+    libffi-dev \
+    libssl-dev \
+    cargo \
+    rustc 2>&1 | tee -a "$LOGFILE" || print_info "Einige Build-Tools konnten nicht installiert werden"
+
 # Virtual Environment erstellen
-python3 -m venv venv
+if [ -d "venv" ]; then
+    print_info "Virtual Environment existiert bereits"
+else
+    print_info "Erstelle Virtual Environment..."
+    python3 -m venv venv
+fi
+
 source venv/bin/activate
 
-# Dependencies installieren
-pip install --upgrade pip
-pip install -r requirements.txt
+# Pip und setuptools aktualisieren
+print_info "Aktualisiere pip, setuptools und wheel..."
+pip install --upgrade pip setuptools wheel
+
+# Dependencies installieren mit erhöhter Toleranz
+print_info "Installiere Python-Dependencies (das kann einige Minuten dauern)..."
+if pip install -r requirements.txt 2>&1 | tee -a "$LOGFILE"; then
+    print_success "Dependencies installiert"
+else
+    print_error "Einige Dependencies konnten nicht installiert werden"
+    print_info "Versuche Installation mit --no-binary..."
+    pip install --no-binary :all: -r requirements.txt 2>&1 | tee -a "$LOGFILE" || {
+        print_error "Installation fehlgeschlagen"
+        print_info "Versuche einzelne Pakete zu installieren..."
+        
+        # Kritische Pakete einzeln installieren
+        pip install fastapi || true
+        pip install uvicorn || true
+        pip install sqlalchemy || true
+        pip install pydantic || true
+        pip install python-jose || true
+        pip install passlib || true
+        pip install python-multipart || true
+        pip install reportlab || true
+        pip install qrcode || true
+        pip install apscheduler || true
+    }
+fi
 
 # Datenbank initialisieren
-python3 -c "from app.database import init_db; init_db()"
+print_info "Initialisiere Datenbank..."
+python3 << PYTHON_INIT
+try:
+    from app.database import init_db
+    init_db()
+    print("Datenbank erfolgreich initialisiert")
+except Exception as e:
+    print(f"Warnung: Datenbank-Initialisierung: {e}")
+    print("Datenbank wird beim ersten Start automatisch erstellt")
+PYTHON_INIT
 
 deactivate
 print_success "Backend eingerichtet"
