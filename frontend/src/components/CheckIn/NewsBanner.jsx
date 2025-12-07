@@ -23,9 +23,10 @@ const NewsBanner = () => {
   const loadNews = async () => {
     try {
       const response = await api.get('/news?active_only=true');
-      setNews(response.data);
+      setNews(Array.isArray(response.data) ? response.data : []);
     } catch (error) {
       console.error('Fehler beim Laden der News:', error);
+      setNews([]);
     }
   };
 

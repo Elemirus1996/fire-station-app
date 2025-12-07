@@ -26,9 +26,10 @@ const AnnouncementBanner = () => {
   const loadAnnouncements = async () => {
     try {
       const response = await api.get('/announcements/active');
-      setAnnouncements(response.data);
+      setAnnouncements(Array.isArray(response.data) ? response.data : []);
     } catch (error) {
       console.error('Fehler beim Laden der Ankündigungen:', error);
+      setAnnouncements([]);
     }
   };
 

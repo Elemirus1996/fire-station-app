@@ -129,13 +129,15 @@ const CheckInKiosk = () => {
   const loadActiveSessions = async () => {
     try {
       const response = await api.get('/sessions/active/current');
-      setSessions(response.data);
-      if (response.data.length === 1) {
-        setSelectedSession(response.data[0]);
+      const data = Array.isArray(response.data) ? response.data : [];
+      setSessions(data);
+      if (data.length === 1) {
+        setSelectedSession(data[0]);
         setShowSessionSelect(false);
       }
     } catch (error) {
       console.error('Fehler beim Laden der Sessions:', error);
+      setSessions([]);
     }
   };
 
@@ -143,9 +145,10 @@ const CheckInKiosk = () => {
     if (!selectedSession) return;
     try {
       const response = await api.get(`/attendance/session/${selectedSession.id}/active`);
-      setActivePersonnel(response.data);
+      setActivePersonnel(Array.isArray(response.data) ? response.data : []);
     } catch (error) {
       console.error('Fehler beim Laden der Anwesenheit:', error);
+      setActivePersonnel([]);
     }
   };
 
