@@ -190,8 +190,18 @@ apt-get install -y \
     libopenjp2-7-dev \
     libtiff5-dev \
     libwebp-dev \
+    tcl8.6-dev \
+    tk8.6-dev \
+    python3-tk \
+    libharfbuzz-dev \
+    libfribidi-dev \
+    libxcb1-dev \
     cargo \
     rustc 2>&1 | tee -a "$LOGFILE" || print_info "Einige Build-Tools konnten nicht installiert werden"
+
+# Fallback: Versuche python3-pillow aus System-Paketen
+print_info "Installiere Pillow aus System-Paketen als Fallback..."
+apt-get install -y python3-pillow 2>&1 | tee -a "$LOGFILE" || true
 
 # Virtual Environment erstellen
 if [ -d "venv" ]; then
@@ -209,27 +219,48 @@ pip install --upgrade pip setuptools wheel
 
 # Dependencies installieren mit erhöhter Toleranz
 print_info "Installiere Python-Dependencies (das kann einige Minuten dauern)..."
+
+# Erst Pillow einzeln versuchen (mit System-Site-Packages falls installiert)
+print_info "Installiere Pillow..."
+if ! pip install pillow 2>&1 | tee -a "$LOGFILE"; then
+    print_info "Pillow pip-Installation fehlgeschlagen, versuche ohne Binary..."
+    pip install --no-binary pillow pillow 2>&1 | tee -a "$LOGFILE" || {
+        print_info "Verwende System-Pillow (python3-pillow)"
+        # Create symlink from system pillow to venv
+        SYSTEM_PILLOW=$(python3 -c "import sys; sys.path.insert(0, '/usr/lib/python3/dist-packages'); import PIL; print(PIL.__path__[0])" 2>/dev/null || echo "")
+        if [ -n "$SYSTEM_PILLOW" ]; then
+            ln -sf "$SYSTEM_PILLOW" "$(pwd)/venv/lib/python*/site-packages/" 2>/dev/null || true
+            print_info "System-Pillow verlinkt"
+        fi
+    }
+fi
+
+# Dann Rest der Dependencies
 if pip install -r requirements.txt 2>&1 | tee -a "$LOGFILE"; then
     print_success "Dependencies installiert"
 else
     print_error "Einige Dependencies konnten nicht installiert werden"
-    print_info "Versuche Installation mit --no-binary..."
-    pip install --no-binary :all: -r requirements.txt 2>&1 | tee -a "$LOGFILE" || {
-        print_error "Installation fehlgeschlagen"
-        print_info "Versuche einzelne Pakete zu installieren..."
-        
-        # Kritische Pakete einzeln installieren
-        pip install fastapi || true
-        pip install uvicorn || true
-        pip install sqlalchemy || true
-        pip install pydantic || true
-        pip install python-jose || true
-        pip install passlib || true
-        pip install python-multipart || true
-        pip install reportlab || true
-        pip install qrcode || true
-        pip install apscheduler || true
-    }
+    print_info "Versuche kritische Pakete einzeln zu installieren..."
+    
+    # Kritische Pakete einzeln installieren (ohne Pillow, das haben wir schon)
+    pip install fastapi || true
+    pip install uvicorn || true
+    pip install sqlalchemy || true
+    pip install pydantic || true
+    pip install python-jose || true
+    pip install passlib || true
+    pip install python-multipart || true
+    pip install reportlab || true
+    pip install qrcode || true
+    pip install apscheduler || true
+fi
+
+# Prüfe ob Pillow funktioniert
+print_info "Prüfe Pillow-Installation..."
+if python3 -c "from PIL import Image; print('Pillow OK')" 2>&1 | grep -q "Pillow OK"; then
+    print_success "Pillow funktioniert"
+else
+    print_info "Warnung: Pillow konnte nicht geladen werden. QR-Code und PDF-Funktionen könnten eingeschränkt sein."
 fi
 
 # Datenbank initialisieren und mit Seed-Daten füllen
