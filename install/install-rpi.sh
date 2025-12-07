@@ -266,6 +266,9 @@ fi
 # Datenbank initialisieren und mit Seed-Daten füllen
 print_info "Initialisiere Datenbank..."
 
+# Stelle sicher dass wir im backend Verzeichnis sind
+cd "$INSTALL_DIR/backend"
+
 # Stelle sicher dass venv aktiviert ist
 if [ -z "$VIRTUAL_ENV" ]; then
     source venv/bin/activate
@@ -274,8 +277,17 @@ fi
 # Verwende Python aus dem venv
 VENV_PYTHON="$(pwd)/venv/bin/python3"
 
+# Prüfe ob Python und Module verfügbar sind
+print_info "Prüfe Python-Umgebung..."
+if ! $VENV_PYTHON -c "import sys; print(sys.version)" 2>/dev/null; then
+    print_error "Python im venv nicht gefunden!"
+    exit 1
+fi
+
+print_info "Führe Datenbank-Initialisierung aus..."
+
 # Führe Initialisierung aus
-$VENV_PYTHON << 'PYTHON_INIT'
+$VENV_PYTHON -c "
 import sys
 import os
 
@@ -283,71 +295,81 @@ import os
 backend_dir = os.getcwd()
 sys.path.insert(0, backend_dir)
 
-print(f"Python: {sys.version}")
-print(f"Working Dir: {backend_dir}")
-print(f"Sys Path: {sys.path[:3]}")
+print(f'Python: {sys.version}')
+print(f'Working Dir: {backend_dir}')
 
 try:
-    print("\nImportiere Module...")
+    print('\\nImportiere Module...')
     from app.database import init_db
     from app.seed import seed_initial_data
-    print("✓ Module erfolgreich importiert")
+    print('✓ Module erfolgreich importiert')
     
     # Tabellen erstellen
-    print("\nErstelle Datenbank-Tabellen...")
+    print('\\nErstelle Datenbank-Tabellen...')
     init_db()
-    print("✓ Datenbank-Tabellen erstellt")
+    print('✓ Datenbank-Tabellen erstellt')
     
     # Seed-Daten einfügen
-    print("\nFüge Dummy-Daten ein...")
+    print('\\nFüge Dummy-Daten ein...')
     seed_initial_data()
-    print("✓ Dummy-Daten eingefügt")
-    print("   - Admin: admin / feuerwehr2025")
-    print("   - 10 Test-Personen")
-    print("   - 4 Gruppen (Jugend, Aktive, Altersabteilung, Ehrenabteilung)")
-    print("   - Standard-Trainings")
+    print('✓ Dummy-Daten eingefügt')
+    print('   - Admin: admin / feuerwehr2025')
+    print('   - 10 Test-Personen')
+    print('   - 4 Gruppen')
+    print('   - Standard-Trainings')
     
 except ImportError as e:
-    print(f"\n❌ Import-Fehler: {e}")
-    print("Module konnten nicht geladen werden")
-    print("Bitte prüfen Sie die Installation der Python-Pakete")
+    print(f'\\n❌ Import-Fehler: {e}')
+    print('Module konnten nicht geladen werden')
     sys.exit(1)
 except Exception as e:
-    print(f"\n❌ Fehler bei Datenbank-Initialisierung: {e}")
+    print(f'\\n❌ Fehler: {e}')
     import traceback
     traceback.print_exc()
-    print("")
-    print("⚠️  WICHTIG: Datenbank wird beim ersten Start automatisch erstellt")
-    print("")
-    print("Falls Fehler auftreten, bitte manuell ausführen:")
-    print("  cd /opt/feuerwehr-app/backend")
-    print("  source venv/bin/activate")
-    print("  python3 << EOF")
-    print("from app.database import init_db")
-    print("from app.seed import seed_initial_data")
-    print("init_db()")
-    print("seed_initial_data()")
-    print("EOF")
-    # Nicht abbrechen, da beim Startup nochmal versucht wird
-PYTHON_INIT
+    sys.exit(1)
+"
+
+DB_INIT_STATUS=$?
+
+if [ $DB_INIT_STATUS -ne 0 ]; then
+    print_error "Datenbank-Initialisierung fehlgeschlagen"
+    print_info "Die Datenbank wird beim ersten Start automatisch erstellt"
+    print_info ""
+    print_info "Zum manuellen Erstellen:"
+    print_info "  cd /opt/feuerwehr-app/backend"
+    print_info "  source venv/bin/activate"
+    print_info "  python3 -c 'from app.database import init_db; from app.seed import seed_initial_data; init_db(); seed_initial_data()'"
+else
+    print_success "Datenbank erfolgreich initialisiert"
+fi
 
 # Prüfe ob Datenbank erstellt wurde
+print_info "Prüfe Datenbank-Datei..."
 if [ -f "fire_station.db" ]; then
     print_success "Datenbank-Datei erstellt: fire_station.db"
-    # Zeige Größe
+    # Zeige Größe und Pfad
     DB_SIZE=$(du -h fire_station.db | cut -f1)
-    print_info "Datenbank-Größe: $DB_SIZE"
+    DB_PATH=$(realpath fire_station.db)
+    print_info "Pfad: $DB_PATH"
+    print_info "Größe: $DB_SIZE"
     
     # Setze Schreibrechte für Datenbank
     chmod 664 fire_station.db
-    print_info "Schreibrechte für Datenbank gesetzt"
+    print_info "Schreibrechte gesetzt (664)"
+    
+    # Zeige Inhalt (Tabellen-Anzahl)
+    TABLE_COUNT=$(sqlite3 fire_station.db "SELECT count(*) FROM sqlite_master WHERE type='table';" 2>/dev/null || echo "0")
+    print_info "Tabellen in Datenbank: $TABLE_COUNT"
 else
-    print_info "Warnung: Datenbank-Datei nicht gefunden"
-    print_info "Sie wird beim ersten Start automatisch erstellt"
+    print_info "⚠️  Datenbank-Datei nicht gefunden im Backend-Verzeichnis"
+    print_info "    Erwartet: $(pwd)/fire_station.db"
+    print_info "    Die Datenbank wird beim ersten Start automatisch erstellt"
 fi
 
 # Stelle sicher dass Backend-Verzeichnis Schreibrechte hat
+print_info "Setze Verzeichnis-Rechte..."
 chmod 775 "$INSTALL_DIR/backend" 2>/dev/null || true
+print_info "Backend-Verzeichnis: 775"
 
 deactivate
 print_success "Backend eingerichtet"
