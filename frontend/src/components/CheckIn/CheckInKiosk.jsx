@@ -27,26 +27,35 @@ const CheckInKiosk = () => {
     // Load system settings
     loadSystemSettings();
     
-    // Setup SSE for kiosk refresh
-    const eventSource = new EventSource(`${import.meta.env.VITE_API_BASE_URL}/events/stream`);
+    // Setup polling for kiosk refresh (every 5 seconds)
+    let lastRefreshTimestamp = null;
     
-    eventSource.onmessage = (event) => {
-      const data = JSON.parse(event.data);
-      if (data.type === 'refresh') {
-        console.log('🔄 Admin triggered refresh, reloading data...');
-        // Reload all data
-        loadSystemSettings();
-        loadActiveSessions();
-        if (selectedSession) {
-          loadActivePersonnel();
+    const checkForRefresh = async () => {
+      try {
+        const response = await api.get('/events/last-refresh');
+        const newTimestamp = response.data.unix_timestamp;
+        
+        if (lastRefreshTimestamp && newTimestamp > lastRefreshTimestamp) {
+          console.log('🔄 Admin triggered refresh, reloading data...');
+          // Reload all data
+          loadSystemSettings();
+          loadActiveSessions();
+          if (selectedSession) {
+            loadActivePersonnel();
+          }
         }
+        
+        lastRefreshTimestamp = newTimestamp;
+      } catch (error) {
+        console.error('Error checking for refresh:', error);
       }
     };
     
-    eventSource.onerror = (error) => {
-      console.error('SSE Error:', error);
-      eventSource.close();
-    };
+    // Check immediately
+    checkForRefresh();
+    
+    // Then check every 5 seconds
+    const refreshInterval = setInterval(checkForRefresh, 5000);
     
     if (qrToken) {
       // Validate QR token and get session
@@ -58,7 +67,7 @@ const CheckInKiosk = () => {
     }
     
     return () => {
-      eventSource.close();
+      clearInterval(refreshInterval);
     };
   }, [qrToken]);
 
