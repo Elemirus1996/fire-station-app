@@ -81,13 +81,26 @@ const PersonnelManagement = () => {
     setShowModal(true);
   };
 
-  const handleDelete = async (id) => {
-    if (!window.confirm('Person wirklich löschen? Diese Aktion kann nicht rückgängig gemacht werden.')) return;
+  const handleToggleActive = async (id, currentStatus) => {
+    const action = currentStatus ? 'deaktivieren' : 'aktivieren';
+    if (!window.confirm(`Person wirklich ${action}?`)) return;
 
     try {
-      await api.delete(`/personnel/${id}`);
+      await api.put(`/personnel/${id}`, { is_active: !currentStatus });
       loadPersonnel();
-      triggerKioskRefresh(); // Trigger kiosk refresh after deletion
+      triggerKioskRefresh();
+    } catch (error) {
+      alert(`Fehler beim ${action}`);
+    }
+  };
+
+  const handleDelete = async (id) => {
+    if (!window.confirm('Person wirklich PERMANENT löschen? Diese Aktion kann nicht rückgängig gemacht werden!')) return;
+
+    try {
+      await api.delete(`/personnel/${id}?permanent=true`);
+      loadPersonnel();
+      triggerKioskRefresh();
     } catch (error) {
       alert('Fehler beim Löschen');
     }
@@ -152,18 +165,26 @@ const PersonnelManagement = () => {
                 <td className="py-3 px-4 text-right space-x-2">
                   <button
                     onClick={() => handleEdit(person)}
-                    className="text-blue-600 hover:text-blue-800"
+                    className="text-blue-600 hover:text-blue-800 font-medium"
                   >
-                    Bearbeiten
+                    ✏️ Bearbeiten
                   </button>
-                  {person.is_active && (
-                    <button
-                      onClick={() => handleDelete(person.id)}
-                      className="text-red-600 hover:text-red-800"
-                    >
-                      Deaktivieren
-                    </button>
-                  )}
+                  <button
+                    onClick={() => handleToggleActive(person.id, person.is_active)}
+                    className={`font-medium ${
+                      person.is_active 
+                        ? 'text-orange-600 hover:text-orange-800' 
+                        : 'text-green-600 hover:text-green-800'
+                    }`}
+                  >
+                    {person.is_active ? '⏸️ Deaktivieren' : '▶️ Aktivieren'}
+                  </button>
+                  <button
+                    onClick={() => handleDelete(person.id)}
+                    className="text-red-600 hover:text-red-800 font-medium"
+                  >
+                    🗑️ Löschen
+                  </button>
                 </td>
               </tr>
             ))}

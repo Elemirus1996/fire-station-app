@@ -145,20 +145,27 @@ async def update_personnel(
 @router.delete("/{personnel_id}")
 async def delete_personnel(
     personnel_id: int,
+    permanent: bool = False,
     db: Session = Depends(get_db),
     current_user: AdminUser = Depends(get_current_user)
 ):
-    """Delete personnel (soft delete by setting is_active=False)"""
+    """Delete personnel (soft delete by default, or permanent if specified)"""
     check_permission(current_user, "personnel:delete")
     
     personnel = db.query(Personnel).filter(Personnel.id == personnel_id).first()
     if not personnel:
         raise HTTPException(status_code=404, detail="Personal nicht gefunden")
     
-    personnel.is_active = False
-    db.commit()
-    
-    return {"message": "Personal erfolgreich deaktiviert"}
+    if permanent:
+        # Permanent deletion - remove from database
+        db.delete(personnel)
+        db.commit()
+        return {"message": "Personal permanent gelöscht"}
+    else:
+        # Soft delete - set is_active to False
+        personnel.is_active = False
+        db.commit()
+        return {"message": "Personal erfolgreich deaktiviert"}
 
 @router.get("/by-nummer/{stammrollennummer}")
 async def get_by_nummer(
