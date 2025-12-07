@@ -80,6 +80,27 @@ Korrekte deutsche Feuerwehr-Dienstgrade:
 - Node.js 18+
 - Git
 
+### Option 1: Raspberry Pi (Empfohlen für Kiosk)
+
+Automatische Installation mit einem Befehl:
+
+```bash
+wget https://raw.githubusercontent.com/Elemirus1996/fire-station-app/main/install/install-rpi.sh
+chmod +x install-rpi.sh
+sudo ./install-rpi.sh
+```
+
+Das Script installiert automatisch:
+- ✅ Alle Dependencies (Python, Node.js, Chromium)
+- ✅ Backend als Systemdienst mit Auto-Start
+- ✅ Frontend mit korrekter IP-Adresse
+- ✅ Kiosk-Modus mit Chromium Vollbild
+- ✅ Smartphone-Zugriff über Netzwerk
+
+**Siehe:** [Raspberry Pi Installation Guide](./install/README-RASPBERRY-PI.md)
+
+### Option 2: Manuelle Installation
+
 ### Backend starten
 ```bash
 cd backend
