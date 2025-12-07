@@ -12,7 +12,7 @@ router = APIRouter(prefix="/api/news", tags=["news"])
 class NewsCreate(BaseModel):
     title: str
     content: str
-    priority: str = "normal"  # low, normal, high, urgent
+    priority: Optional[str] = "normal"  # low, normal, high, urgent
     expires_at: Optional[datetime] = None
 
 class NewsUpdate(BaseModel):

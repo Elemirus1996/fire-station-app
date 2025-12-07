@@ -52,6 +52,17 @@ const SessionManagement = () => {
     }
   };
 
+  const deleteSession = async (sessionId) => {
+    if (!window.confirm('Session wirklich löschen? Diese Aktion kann nicht rückgängig gemacht werden.')) return;
+
+    try {
+      await api.delete(`/sessions/${sessionId}`);
+      loadSessions();
+    } catch (error) {
+      alert('Fehler beim Löschen der Session: ' + (error.response?.data?.detail || error.message));
+    }
+  };
+
   const downloadPDF = async (sessionId) => {
     try {
       const response = await api.get(`/sessions/${sessionId}/pdf`, {
@@ -415,6 +426,12 @@ const SessionManagement = () => {
                     className="bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition-all text-sm"
                   >
                     📄 PDF
+                  </button>
+                  <button
+                    onClick={() => deleteSession(session.id)}
+                    className="bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600 transition-all text-sm"
+                  >
+                    🗑️ Löschen
                   </button>
                 </div>
               </div>

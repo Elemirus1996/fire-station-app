@@ -82,7 +82,7 @@ const PersonnelManagement = () => {
   };
 
   const handleDelete = async (id) => {
-    if (!window.confirm('Person wirklich deaktivieren?')) return;
+    if (!window.confirm('Person wirklich löschen? Diese Aktion kann nicht rückgängig gemacht werden.')) return;
 
     try {
       await api.delete(`/personnel/${id}`);

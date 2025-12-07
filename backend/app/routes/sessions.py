@@ -206,6 +206,32 @@ async def end_session_with_rank(
     else:
         raise HTTPException(status_code=400, detail="Fehler beim Beenden der Session")
 
+@router.delete("/{session_id}")
+async def delete_session(
+    session_id: int,
+    current_user: AdminUser = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """Delete a session (admin only)"""
+    check_permission(current_user, "write")
+    
+    session = db.query(SessionModel).filter(SessionModel.id == session_id).first()
+    if not session:
+        raise HTTPException(status_code=404, detail="Session nicht gefunden")
+    
+    # Don't allow deletion of active sessions
+    if session.is_active:
+        raise HTTPException(status_code=400, detail="Aktive Sessions können nicht gelöscht werden. Bitte erst beenden.")
+    
+    # Delete all related attendances first
+    db.query(Attendance).filter(Attendance.session_id == session_id).delete()
+    
+    # Delete the session
+    db.delete(session)
+    db.commit()
+    
+    return {"message": "Session erfolgreich gelöscht"}
+
 @router.get("/active/current")
 async def get_active_sessions(db: Session = Depends(get_db)):
     """Get all currently active sessions"""

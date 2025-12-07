@@ -13,7 +13,7 @@ router = APIRouter(prefix="/api/announcements", tags=["announcements"])
 class AnnouncementCreate(BaseModel):
     title: str
     content: str
-    priority: str = "normal"  # normal/high/urgent
+    priority: Optional[str] = "normal"  # normal/high/urgent
     valid_from: Optional[datetime] = None
     valid_until: Optional[datetime] = None
     target_groups: Optional[List[int]] = None

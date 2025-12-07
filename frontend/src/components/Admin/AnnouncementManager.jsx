@@ -9,7 +9,6 @@ const AnnouncementManager = () => {
   const [formData, setFormData] = useState({
     title: '',
     content: '',
-    priority: 'normal',
     valid_from: '',
     valid_until: ''
   });
@@ -72,7 +71,6 @@ const AnnouncementManager = () => {
     setFormData({
       title: announcement.title,
       content: announcement.content,
-      priority: announcement.priority,
       valid_from: announcement.valid_from ? new Date(announcement.valid_from).toISOString().slice(0, 16) : '',
       valid_until: announcement.valid_until ? new Date(announcement.valid_until).toISOString().slice(0, 16) : ''
     });
@@ -83,7 +81,6 @@ const AnnouncementManager = () => {
     setFormData({
       title: '',
       content: '',
-      priority: 'normal',
       valid_from: '',
       valid_until: ''
     });
@@ -149,7 +146,6 @@ const AnnouncementManager = () => {
               <div className="flex justify-between items-start mb-2">
                 <div className="flex items-center space-x-3">
                   <h3 className="text-lg font-bold text-gray-800">{announcement.title}</h3>
-                  {getPriorityBadge(announcement.priority)}
                   {isActive(announcement) && (
                     <span className="bg-green-500 text-white px-2 py-1 rounded text-xs font-semibold">
                       AKTIV
@@ -223,21 +219,6 @@ const AnnouncementManager = () => {
                   rows="4"
                   required
                 />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Priorität
-                </label>
-                <select
-                  value={formData.priority}
-                  onChange={(e) => setFormData({ ...formData, priority: e.target.value })}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-fire-red"
-                >
-                  <option value="normal">Normal</option>
-                  <option value="high">Wichtig</option>
-                  <option value="urgent">Dringend</option>
-                </select>
               </div>
 
               <div className="grid grid-cols-2 gap-4">
