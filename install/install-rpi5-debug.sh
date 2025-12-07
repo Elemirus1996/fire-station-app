@@ -280,6 +280,7 @@ cat > /etc/systemd/system/fire-station-backend.service <<EOF
 [Unit]
 Description=Fire Station Backend API
 After=network.target postgresql.service
+Wants=postgresql.service
 
 [Service]
 Type=simple
@@ -288,6 +289,7 @@ WorkingDirectory=$INSTALL_DIR/backend
 Environment="PATH=$INSTALL_DIR/backend/venv/bin"
 ExecStart=$INSTALL_DIR/backend/venv/bin/uvicorn main:app --host 0.0.0.0 --port 8000
 Restart=always
+RestartSec=5
 
 [Install]
 WantedBy=multi-user.target
@@ -300,6 +302,7 @@ cat > /etc/systemd/system/fire-station-frontend.service <<EOF
 [Unit]
 Description=Fire Station Frontend
 After=network.target fire-station-backend.service
+Wants=fire-station-backend.service
 
 [Service]
 Type=simple
@@ -307,6 +310,7 @@ User=root
 WorkingDirectory=$INSTALL_DIR/frontend
 ExecStart=/usr/bin/npm run preview -- --host 0.0.0.0 --port 5173
 Restart=always
+RestartSec=5
 
 [Install]
 WantedBy=multi-user.target

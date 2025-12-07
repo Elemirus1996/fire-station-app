@@ -139,6 +139,16 @@ const AdminDashboard = () => {
                   EINSTELLUNGEN
                 </div>
                 <Link
+                  to="/admin/change-password"
+                  className={`block px-4 py-2 rounded-lg transition-all ${
+                    isActive('/admin/change-password')
+                      ? 'bg-fire-red text-white'
+                      : 'hover:bg-gray-100'
+                  }`}
+                >
+                  🔐 Passwort ändern
+                </Link>
+                <Link
                   to="/admin/settings/firestation"
                   className={`block px-4 py-2 rounded-lg transition-all ${
                     isActive('/admin/settings/firestation')

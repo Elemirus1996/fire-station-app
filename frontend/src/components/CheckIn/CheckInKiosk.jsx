@@ -27,6 +27,27 @@ const CheckInKiosk = () => {
     // Load system settings
     loadSystemSettings();
     
+    // Setup SSE for kiosk refresh
+    const eventSource = new EventSource(`${import.meta.env.VITE_API_BASE_URL}/events/stream`);
+    
+    eventSource.onmessage = (event) => {
+      const data = JSON.parse(event.data);
+      if (data.type === 'refresh') {
+        console.log('🔄 Admin triggered refresh, reloading data...');
+        // Reload all data
+        loadSystemSettings();
+        loadActiveSessions();
+        if (selectedSession) {
+          loadActivePersonnel();
+        }
+      }
+    };
+    
+    eventSource.onerror = (error) => {
+      console.error('SSE Error:', error);
+      eventSource.close();
+    };
+    
     if (qrToken) {
       // Validate QR token and get session
       validateQRToken();
@@ -35,6 +56,10 @@ const CheckInKiosk = () => {
     } else {
       loadActiveSessions();
     }
+    
+    return () => {
+      eventSource.close();
+    };
   }, [qrToken]);
 
   useEffect(() => {

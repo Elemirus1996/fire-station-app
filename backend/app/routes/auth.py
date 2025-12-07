@@ -53,3 +53,35 @@ async def get_me(current_user: AdminUser = Depends(get_current_user)):
         "role": current_user.role,
         "last_login": current_user.last_login
     }
+
+class ChangePasswordRequest(BaseModel):
+    current_password: str
+    new_password: str
+
+@router.post("/change-password")
+async def change_password(
+    request: ChangePasswordRequest,
+    current_user: AdminUser = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """Change current user's password"""
+    # Verify current password
+    if not verify_password(request.current_password, current_user.hashed_password):
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Aktuelles Passwort ist falsch"
+        )
+    
+    # Validate new password
+    if len(request.new_password) < 6:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Neues Passwort muss mindestens 6 Zeichen lang sein"
+        )
+    
+    # Update password
+    from ..utils.auth import get_password_hash
+    current_user.hashed_password = get_password_hash(request.new_password)
+    db.commit()
+    
+    return {"status": "ok", "message": "Passwort erfolgreich geändert"}

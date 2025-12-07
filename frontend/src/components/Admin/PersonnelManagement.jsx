@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import api from '../../api';
+import triggerKioskRefresh from '../../utils/kioskRefresh';
 
 const PersonnelManagement = () => {
   const [personnel, setPersonnel] = useState([]);
@@ -85,6 +86,7 @@ const PersonnelManagement = () => {
     try {
       await api.delete(`/personnel/${id}`);
       loadPersonnel();
+      triggerKioskRefresh(); // Trigger kiosk refresh after deletion
     } catch (error) {
       alert('Fehler beim Löschen');
     }

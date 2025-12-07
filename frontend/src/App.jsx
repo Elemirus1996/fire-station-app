@@ -14,6 +14,7 @@ import AnnouncementManager from './components/Admin/AnnouncementManager';
 import NewsManager from './components/Admin/NewsManager';
 import LiveDashboard from './components/Admin/LiveDashboard';
 import Statistics from './components/Admin/Statistics';
+import ChangePassword from './components/Admin/ChangePassword';
 import ScreensaverDebugTest from './components/CheckIn/ScreensaverDebugTest';
 
 function App() {
@@ -35,6 +36,7 @@ function App() {
           <Route path="news" element={<NewsManager />} />
           <Route path="dashboard" element={<LiveDashboard />} />
           <Route path="statistics" element={<Statistics />} />
+          <Route path="change-password" element={<ChangePassword />} />
           <Route path="settings/firestation" element={<FireStationSettings />} />
           <Route path="settings/system" element={<SystemSettings />} />
           <Route path="settings/backup" element={<BackupSettings />} />
