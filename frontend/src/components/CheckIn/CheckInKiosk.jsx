@@ -380,11 +380,11 @@ const CheckInKiosk = () => {
         {showScreensaver && <Screensaver onActivity={handleScreensaverActivity} />}
         
         <div className="min-h-screen bg-gradient-to-br from-fire-red to-fire-orange">
-        {/* News Banner */}
-        <NewsBanner />
+        {/* News Banner - nur bei nicht-Einsatz Sessions */}
+        {selectedSession?.event_type !== 'Einsatz' && <NewsBanner />}
         
-        {/* Announcement Banner */}
-        <AnnouncementBanner />
+        {/* Announcement Banner - nur bei nicht-Einsatz Sessions */}
+        {selectedSession?.event_type !== 'Einsatz' && <AnnouncementBanner />}
         
         <div className="p-4">
           <div className="max-w-md mx-auto">
@@ -471,11 +471,11 @@ const CheckInKiosk = () => {
       {showScreensaver && <Screensaver onActivity={handleScreensaverActivity} />}
       
       <div className="min-h-screen bg-gradient-to-br from-fire-red to-fire-orange">
-        {/* News Banner */}
-        <NewsBanner />
+        {/* News Banner - nur bei nicht-Einsatz Sessions */}
+        {selectedSession?.event_type !== 'Einsatz' && <NewsBanner />}
         
-        {/* Announcement Banner */}
-        <AnnouncementBanner />
+        {/* Announcement Banner - nur bei nicht-Einsatz Sessions */}
+        {selectedSession?.event_type !== 'Einsatz' && <AnnouncementBanner />}
       
         <div className="p-4">
           <div className="max-w-7xl mx-auto">
