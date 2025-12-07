@@ -403,7 +403,11 @@ echo ""
 
 # QR-Code für mobile Verbindung generieren
 print_info "QR-Code für Smartphone-Zugriff wird generiert..."
-pip3 install qrcode[pil]
+
+# QR-Code im Backend-venv installieren
+cd $INSTALL_DIR/backend
+source venv/bin/activate
+pip install qrcode[pil] 2>&1 | tee -a "$LOGFILE" || print_info "QR-Code Paket bereits installiert"
 
 python3 << PYTHON_SCRIPT
 import qrcode
@@ -411,9 +415,17 @@ url = "http://${IP_ADDRESS}:5173/kiosk"
 qr = qrcode.QRCode(version=1, box_size=10, border=5)
 qr.add_data(url)
 qr.make(fit=True)
+print("\n" + "="*50)
+print("📱 QR-CODE FÜR SMARTPHONE-ZUGRIFF")
+print("="*50)
 qr.print_ascii(invert=True)
-print("\nScanne diesen QR-Code mit deinem Smartphone für mobilen Zugriff!")
+print("\nScanne diesen QR-Code mit deinem Smartphone!")
+print(f"Oder gib manuell ein: {url}")
+print("="*50 + "\n")
 PYTHON_SCRIPT
+
+deactivate
+cd $INSTALL_DIR
 
 echo ""
 
