@@ -331,6 +331,24 @@ except Exception as e:
 
 DB_INIT_STATUS=$?
 
+# KRITISCH: Berechtigungen für Datenbank setzen (Fix für readonly database)
+print_info "Setze Datenbank-Berechtigungen..."
+if [ -f "$INSTALL_DIR/backend/fire_station.db" ]; then
+    chmod 666 $INSTALL_DIR/backend/fire_station.db
+    chmod 777 $INSTALL_DIR/backend
+    print_success "Datenbank-Berechtigungen gesetzt (666/777)"
+    
+    # Prüfe Größe und Berechtigungen
+    DB_SIZE=$(stat -f%z "$INSTALL_DIR/backend/fire_station.db" 2>/dev/null || stat -c%s "$INSTALL_DIR/backend/fire_station.db" 2>/dev/null)
+    DB_PERMS=$(stat -f%Lp "$INSTALL_DIR/backend/fire_station.db" 2>/dev/null || stat -c%a "$INSTALL_DIR/backend/fire_station.db" 2>/dev/null)
+    print_info "Datenbank-Datei erstellt: fire_station.db"
+    print_info "   Pfad: $INSTALL_DIR/backend/fire_station.db"
+    print_info "   Größe: $DB_SIZE bytes"
+    print_info "   Berechtigungen: $DB_PERMS"
+else
+    print_error "Datenbank-Datei wurde nicht erstellt!"
+fi
+
 if [ $DB_INIT_STATUS -ne 0 ]; then
     print_error "Datenbank-Initialisierung fehlgeschlagen"
     print_info "Die Datenbank wird beim ersten Start automatisch erstellt"
@@ -343,21 +361,9 @@ else
     print_success "Datenbank erfolgreich initialisiert"
 fi
 
-# Prüfe ob Datenbank erstellt wurde
-print_info "Prüfe Datenbank-Datei..."
+# Prüfe ob Datenbank erstellt wurde (Legacy Check - bereits oben gemacht)
 if [ -f "fire_station.db" ]; then
-    print_success "Datenbank-Datei erstellt: fire_station.db"
-    # Zeige Größe und Pfad
-    DB_SIZE=$(du -h fire_station.db | cut -f1)
-    DB_PATH=$(realpath fire_station.db)
-    print_info "Pfad: $DB_PATH"
-    print_info "Größe: $DB_SIZE"
-    
-    # Setze Schreibrechte für Datenbank
-    chmod 664 fire_station.db
-    print_info "Schreibrechte gesetzt (664)"
-    
-    # Zeige Inhalt (Tabellen-Anzahl)
+    # Zeige Tabellen-Anzahl
     TABLE_COUNT=$(sqlite3 fire_station.db "SELECT count(*) FROM sqlite_master WHERE type='table';" 2>/dev/null || echo "0")
     print_info "Tabellen in Datenbank: $TABLE_COUNT"
 else
@@ -368,8 +374,8 @@ fi
 
 # Stelle sicher dass Backend-Verzeichnis Schreibrechte hat
 print_info "Setze Verzeichnis-Rechte..."
-chmod 775 "$INSTALL_DIR/backend" 2>/dev/null || true
-print_info "Backend-Verzeichnis: 775"
+chmod 777 "$INSTALL_DIR/backend" 2>/dev/null || true
+print_info "Backend-Verzeichnis: 777 (volle Schreibrechte)"
 
 deactivate
 print_success "Backend eingerichtet"
