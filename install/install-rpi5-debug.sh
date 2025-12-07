@@ -216,6 +216,40 @@ check_status ".env Datei erstellt"
 print_info "Initialisiere Datenbank..."
 python -c "from app.database import init_db; init_db()"
 check_status "Datenbank initialisiert"
+
+print_info "Erstelle Admin-User..."
+python << 'EOFPYTHON'
+from app.database import SessionLocal
+from app.models import AdminUser
+from passlib.context import CryptContext
+
+pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+db = SessionLocal()
+
+try:
+    # Prüfe ob Admin existiert
+    admin = db.query(AdminUser).filter(AdminUser.username == "admin").first()
+    
+    if not admin:
+        print("  Erstelle Admin-User...")
+        admin = AdminUser(
+            username="admin",
+            hashed_password=pwd_context.hash("admin123"),
+            role="admin"
+        )
+        db.add(admin)
+        db.commit()
+        print("  ✓ Admin-User erstellt (Username: admin, Password: admin123)")
+    else:
+        print("  ✓ Admin-User existiert bereits")
+except Exception as e:
+    print(f"  ✗ Fehler: {e}")
+    import traceback
+    traceback.print_exc()
+finally:
+    db.close()
+EOFPYTHON
+check_status "Admin-User erstellt"
 echo ""
 
 # 8. Frontend Setup
