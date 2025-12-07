@@ -74,6 +74,9 @@ const BackupSettings = () => {
     try {
       await api.put('/settings/backup', settings);
       setMessage({ text: 'Einstellungen erfolgreich gespeichert', type: 'success' });
+      
+      // Reload settings to confirm they were saved
+      await loadSettings();
     } catch (error) {
       setMessage({ 
         text: error.response?.data?.detail || 'Fehler beim Speichern', 

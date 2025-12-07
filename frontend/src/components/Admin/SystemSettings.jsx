@@ -80,6 +80,10 @@ const SystemSettings = () => {
     try {
       await api.put('/settings/system', settings);
       setMessage({ text: 'Einstellungen erfolgreich gespeichert', type: 'success' });
+      
+      // Reload settings to confirm they were saved
+      await loadSettings();
+      
       setTimeout(() => setMessage({ text: '', type: '' }), 3000);
     } catch (error) {
       setMessage({ 

@@ -337,10 +337,17 @@ if [ -f "fire_station.db" ]; then
     # Zeige Größe
     DB_SIZE=$(du -h fire_station.db | cut -f1)
     print_info "Datenbank-Größe: $DB_SIZE"
+    
+    # Setze Schreibrechte für Datenbank
+    chmod 664 fire_station.db
+    print_info "Schreibrechte für Datenbank gesetzt"
 else
     print_info "Warnung: Datenbank-Datei nicht gefunden"
     print_info "Sie wird beim ersten Start automatisch erstellt"
 fi
+
+# Stelle sicher dass Backend-Verzeichnis Schreibrechte hat
+chmod 775 "$INSTALL_DIR/backend" 2>/dev/null || true
 
 deactivate
 print_success "Backend eingerichtet"

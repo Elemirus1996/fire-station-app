@@ -60,12 +60,14 @@ async def update_firestation_settings(
     if not fire_station:
         fire_station = FireStation()
         db.add(fire_station)
+        db.flush()  # Get ID before continuing
     
     update_data = settings.dict(exclude_unset=True)
     for field, value in update_data.items():
         setattr(fire_station, field, value)
     
     db.commit()
+    db.refresh(fire_station)
     return {"message": "Einstellungen erfolgreich aktualisiert"}
 
 @router.post("/firestation/logo")
@@ -173,12 +175,14 @@ async def update_backup_settings(
     if not sys_settings:
         sys_settings = SystemSettings()
         db.add(sys_settings)
+        db.flush()  # Get ID before continuing
     
     update_data = settings.dict(exclude_unset=True)
     for field, value in update_data.items():
         setattr(sys_settings, field, value)
     
     db.commit()
+    db.refresh(sys_settings)
     return {"message": "Backup-Einstellungen erfolgreich aktualisiert"}
 
 @router.post("/backup/validate-path")
@@ -236,6 +240,7 @@ async def update_system_settings(
     if not sys_settings:
         sys_settings = SystemSettings()
         db.add(sys_settings)
+        db.flush()  # Get ID before continuing
     
     update_data = settings.dict(exclude_unset=True)
     
@@ -252,4 +257,5 @@ async def update_system_settings(
         setattr(sys_settings, field, value)
     
     db.commit()
+    db.refresh(sys_settings)
     return {"message": "System-Einstellungen erfolgreich aktualisiert"}
