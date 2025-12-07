@@ -12,7 +12,7 @@ from app.services.backup_manager import BackupManager
 from app.models import SystemSettings
 
 # Import routes
-from app.routes import auth, personnel, sessions, attendance, settings, backup, export, announcements, news, statistics
+from app.routes import auth, personnel, sessions, attendance, settings, backup, export, announcements, news, statistics, system
 
 app = FastAPI(
     title="Feuerwehr Anwesenheitssystem",
@@ -40,6 +40,7 @@ app.include_router(export.router)
 app.include_router(announcements.router)
 app.include_router(news.router)
 app.include_router(statistics.router)
+app.include_router(system.router)
 
 # Serve uploaded files
 os.makedirs("./uploads", exist_ok=True)

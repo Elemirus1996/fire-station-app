@@ -198,6 +198,8 @@ class SystemSettingsUpdate(BaseModel):
     screensaver_timeout: Optional[int] = None
     screensaver_show_logo: Optional[bool] = None
     screensaver_show_clock: Optional[bool] = None
+    auto_update_enabled: Optional[bool] = None
+    auto_update_time: Optional[str] = None
 
 @router.get("/system")
 async def get_system_settings(db: Session = Depends(get_db)):
@@ -216,7 +218,9 @@ async def get_system_settings(db: Session = Depends(get_db)):
         "screensaver_enabled": getattr(settings, 'screensaver_enabled', True),
         "screensaver_timeout": getattr(settings, 'screensaver_timeout', 300),
         "screensaver_show_logo": getattr(settings, 'screensaver_show_logo', True),
-        "screensaver_show_clock": getattr(settings, 'screensaver_show_clock', True)
+        "screensaver_show_clock": getattr(settings, 'screensaver_show_clock', True),
+        "auto_update_enabled": getattr(settings, 'auto_update_enabled', False),
+        "auto_update_time": getattr(settings, 'auto_update_time', '03:00')
     }
 
 @router.put("/system")

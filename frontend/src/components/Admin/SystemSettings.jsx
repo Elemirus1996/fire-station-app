@@ -8,7 +8,9 @@ const SystemSettings = () => {
     screensaver_enabled: true,
     screensaver_timeout: 300,
     screensaver_show_logo: true,
-    screensaver_show_clock: true
+    screensaver_show_clock: true,
+    auto_update_enabled: false,
+    auto_update_time: '03:00'
   });
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -240,6 +242,62 @@ const SystemSettings = () => {
                     </label>
                   </div>
                 </>
+              )}
+            </div>
+          </div>
+
+          {/* Auto-Update Settings */}
+          <div className="border-t pt-6">
+            <h3 className="text-lg font-semibold text-gray-800 mb-4">🔄 Automatische Updates</h3>
+            
+            <div className="space-y-4">
+              {/* Enable Auto-Update */}
+              <div className="flex items-start space-x-3">
+                <input 
+                  type="checkbox"
+                  id="auto-update"
+                  checked={settings.auto_update_enabled}
+                  onChange={(e) => setSettings({...settings, auto_update_enabled: e.target.checked})}
+                  className="w-5 h-5 mt-0.5 text-fire-red rounded focus:ring-fire-red"
+                />
+                <label htmlFor="auto-update" className="flex-1">
+                  <span className="text-sm font-medium text-gray-700 block">
+                    Automatische Updates aktivieren
+                  </span>
+                  <span className="text-xs text-gray-500">
+                    Das System prüft täglich auf neue Updates und installiert diese automatisch
+                  </span>
+                </label>
+              </div>
+
+              {/* Auto-Update Time */}
+              {settings.auto_update_enabled && (
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Update-Zeitpunkt
+                  </label>
+                  <input 
+                    type="time"
+                    value={settings.auto_update_time}
+                    onChange={(e) => setSettings({...settings, auto_update_time: e.target.value})}
+                    className="w-full sm:w-48 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-fire-red focus:border-transparent"
+                  />
+                  <p className="text-xs text-gray-500 mt-1">
+                    Uhrzeit für tägliche Update-Prüfung und Installation (empfohlen: nachts)
+                  </p>
+                </div>
+              )}
+
+              {/* Warning */}
+              {settings.auto_update_enabled && (
+                <div className="p-3 bg-yellow-50 rounded-lg text-sm">
+                  <p className="font-semibold text-yellow-800 mb-1">⚠️ Wichtig:</p>
+                  <ul className="text-yellow-700 space-y-1 ml-4 list-disc">
+                    <li>Updates werden automatisch von GitHub heruntergeladen</li>
+                    <li>Die Anwendung wird während des Updates kurz nicht verfügbar sein</li>
+                    <li>Wählen Sie eine Uhrzeit mit wenig Nutzung (z.B. nachts)</li>
+                  </ul>
+                </div>
               )}
             </div>
           </div>

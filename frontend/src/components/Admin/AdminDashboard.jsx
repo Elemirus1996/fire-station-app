@@ -159,6 +159,16 @@ const AdminDashboard = () => {
                   ⚙️ System
                 </Link>
                 <Link
+                  to="/admin/settings/update"
+                  className={`block px-4 py-2 rounded-lg transition-all ${
+                    isActive('/admin/settings/update')
+                      ? 'bg-fire-red text-white'
+                      : 'hover:bg-gray-100'
+                  }`}
+                >
+                  🔄 System-Update
+                </Link>
+                <Link
                   to="/admin/settings/backup"
                   className={`block px-4 py-2 rounded-lg transition-all ${
                     isActive('/admin/settings/backup')

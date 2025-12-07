@@ -122,6 +122,11 @@ class SystemSettings(Base):
     screensaver_timeout = Column(Integer, default=300)  # seconds
     screensaver_show_logo = Column(Boolean, default=True)
     screensaver_show_clock = Column(Boolean, default=True)
+    # Auto-update settings
+    auto_update_enabled = Column(Boolean, default=False)
+    auto_update_time = Column(String(5), default="03:00")  # Time to check for updates
+    last_update_check = Column(DateTime)
+    last_update_version = Column(String(100))
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
 
