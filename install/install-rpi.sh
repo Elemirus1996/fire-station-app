@@ -547,6 +547,7 @@ sleep 10
 # Chromium im Kiosk-Modus starten (verwende ermittelte Chromium-Command)
 ${CHROMIUM_CMD} \
     --kiosk \
+    --password-store=basic \
     --noerrdialogs \
     --disable-infobars \
     --disable-session-crashed-bubble \
@@ -561,7 +562,7 @@ ${CHROMIUM_CMD} \
 # Bei Chromium-Absturz neu starten
 while true; do
     if ! pgrep -x "${CHROMIUM_CMD}" > /dev/null; then
-        ${CHROMIUM_CMD} --kiosk --app=http://${IP_ADDRESS}:5173/kiosk &
+        ${CHROMIUM_CMD} --kiosk --password-store=basic --app=http://${IP_ADDRESS}:5173/kiosk &
     fi
     sleep 10
 done
