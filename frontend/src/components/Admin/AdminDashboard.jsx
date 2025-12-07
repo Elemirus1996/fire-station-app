@@ -1,9 +1,11 @@
 import React, { useEffect, useState } from 'react';
 import { Outlet, Link, useNavigate, useLocation } from 'react-router-dom';
 import api from '../../api';
+import triggerKioskRefresh from '../../utils/kioskRefresh';
 
 const AdminDashboard = () => {
   const [user, setUser] = useState(null);
+  const [refreshing, setRefreshing] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -32,6 +34,12 @@ const AdminDashboard = () => {
     navigate('/admin/login');
   };
 
+  const handleRefreshKiosk = async () => {
+    setRefreshing(true);
+    await triggerKioskRefresh();
+    setTimeout(() => setRefreshing(false), 1000);
+  };
+
   const isActive = (path) => {
     return location.pathname === path || location.pathname.startsWith(path + '/');
   };
@@ -49,6 +57,15 @@ const AdminDashboard = () => {
             <h1 className="text-2xl font-bold">🚒 Feuerwehr Admin</h1>
           </div>
           <div className="flex items-center space-x-4">
+            <button
+              onClick={handleRefreshKiosk}
+              disabled={refreshing}
+              className="bg-blue-600 hover:bg-blue-700 px-4 py-2 rounded-lg text-sm transition-all flex items-center gap-2 disabled:bg-gray-400"
+              title="Kiosk-Ansicht neu laden"
+            >
+              <span className={refreshing ? 'animate-spin' : ''}>🔄</span>
+              {refreshing ? 'Wird aktualisiert...' : 'Kiosk neu laden'}
+            </button>
             <span className="text-sm">
               {user.username} ({user.role})
             </span>
