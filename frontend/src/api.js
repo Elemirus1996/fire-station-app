@@ -1,7 +1,10 @@
 import axios from 'axios';
 
+// Create axios instance with base URL from environment variable
+// For development with proxy: use '/api'
+// For production: use full URL like 'http://192.168.1.100:8000/api'
 const api = axios.create({
-  baseURL: '/api',
+  baseURL: import.meta.env.VITE_API_URL || '/api',
   headers: {
     'Content-Type': 'application/json',
   },
