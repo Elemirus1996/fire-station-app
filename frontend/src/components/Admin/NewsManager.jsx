@@ -21,9 +21,10 @@ const NewsManager = () => {
     try {
       setLoading(true);
       const response = await api.get('/news?active_only=false');
-      setNewsList(response.data);
+      setNewsList(Array.isArray(response.data) ? response.data : []);
     } catch (error) {
       console.error('Fehler beim Laden der News:', error);
+      setNewsList([]);
     } finally {
       setLoading(false);
     }

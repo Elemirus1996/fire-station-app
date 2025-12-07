@@ -23,9 +23,11 @@ const Statistics = () => {
   const loadPersonnel = async () => {
     try {
       const response = await api.get('/personnel');
-      setPersonnel(response.data.filter(p => p.is_active));
+      const data = Array.isArray(response.data) ? response.data : [];
+      setPersonnel(data.filter(p => p.is_active));
     } catch (error) {
       console.error('Fehler beim Laden der Personen:', error);
+      setPersonnel([]);
     }
   };
 

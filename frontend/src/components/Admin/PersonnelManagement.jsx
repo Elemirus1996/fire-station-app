@@ -33,9 +33,10 @@ const PersonnelManagement = () => {
     try {
       setLoading(true);
       const response = await api.get('/personnel?active_only=false');
-      setPersonnel(response.data);
+      setPersonnel(Array.isArray(response.data) ? response.data : []);
     } catch (error) {
       console.error('Fehler beim Laden des Personals:', error);
+      setPersonnel([]);
     } finally {
       setLoading(false);
     }

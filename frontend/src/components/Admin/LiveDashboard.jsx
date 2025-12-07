@@ -19,7 +19,8 @@ const LiveDashboard = () => {
         api.get('/personnel')
       ]);
 
-      const activeSessions = sessionsRes.data;
+      const activeSessions = Array.isArray(sessionsRes.data) ? sessionsRes.data : [];
+      const personnel = Array.isArray(personnelRes.data) ? personnelRes.data : [];
       let totalActive = 0;
       let totalToday = 0;
 
@@ -31,7 +32,7 @@ const LiveDashboard = () => {
       setDashboardData({
         activeSessions: activeSessions.length,
         activePersonnel: totalActive,
-        totalPersonnel: personnelRes.data.filter(p => p.is_active).length,
+        totalPersonnel: personnel.filter(p => p.is_active).length,
         totalToday,
         sessions: activeSessions
       });
@@ -39,6 +40,7 @@ const LiveDashboard = () => {
       setLoading(false);
     } catch (error) {
       console.error('Fehler beim Laden des Dashboards:', error);
+      setLoading(false);
     }
   };
 

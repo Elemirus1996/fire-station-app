@@ -22,9 +22,10 @@ const SessionManagement = () => {
     try {
       setLoading(true);
       const response = await api.get('/sessions?limit=50');
-      setSessions(response.data);
+      setSessions(Array.isArray(response.data) ? response.data : []);
     } catch (error) {
       console.error('Fehler beim Laden der Sessions:', error);
+      setSessions([]);
     } finally {
       setLoading(false);
     }
