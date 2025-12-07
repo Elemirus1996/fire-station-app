@@ -183,6 +183,13 @@ apt-get install -y \
     python3-dev \
     libffi-dev \
     libssl-dev \
+    libjpeg-dev \
+    zlib1g-dev \
+    libfreetype6-dev \
+    liblcms2-dev \
+    libopenjp2-7-dev \
+    libtiff5-dev \
+    libwebp-dev \
     cargo \
     rustc 2>&1 | tee -a "$LOGFILE" || print_info "Einige Build-Tools konnten nicht installiert werden"
 
@@ -246,7 +253,13 @@ print_info "Schritt 7/10: Frontend wird eingerichtet..."
 cd $INSTALL_DIR/frontend
 
 # Umgebungsvariable für Backend-URL setzen
+print_info "Konfiguriere Backend-URL: http://${IP_ADDRESS}:8000"
 cat > .env << EOF
+VITE_API_BASE_URL=http://${IP_ADDRESS}:8000
+EOF
+
+# Auch in .env.production
+cat > .env.production << EOF
 VITE_API_BASE_URL=http://${IP_ADDRESS}:8000
 EOF
 
@@ -254,30 +267,42 @@ EOF
 print_info "Installiere Node.js Dependencies (das kann einige Minuten dauern)..."
 npm install 2>&1 | tee -a "$LOGFILE"
 
-# Frontend bauen
-print_info "Baue Frontend..."
-npm run build 2>&1 | tee -a "$LOGFILE"
+# Alte Build-Dateien löschen
+rm -rf dist
+
+# Frontend bauen mit Produktion-Modus
+print_info "Baue Frontend im Produktions-Modus..."
+NODE_ENV=production npm run build 2>&1 | tee -a "$LOGFILE"
+
+# Prüfen ob dist Ordner existiert
+if [ ! -d "dist" ]; then
+    print_error "Frontend-Build fehlgeschlagen - dist Ordner nicht gefunden"
+    exit 1
+fi
+
+print_success "Frontend erfolgreich gebaut"
 
 # Serve global installieren (mit korrektem Pfad)
 print_info "Installiere serve für Frontend-Hosting..."
 npm install -g serve 2>&1 | tee -a "$LOGFILE"
 
 # Serve-Pfad ermitteln
-SERVE_PATH=$(which serve 2>/dev/null || echo "/usr/bin/serve")
-if [ ! -f "$SERVE_PATH" ]; then
-    # Versuche alternativen Pfad
-    SERVE_PATH="/usr/local/bin/serve"
-    if [ ! -f "$SERVE_PATH" ]; then
-        # Erstelle Symlink falls serve woanders installiert ist
-        NPM_BIN=$(npm bin -g)
-        if [ -f "$NPM_BIN/serve" ]; then
-            ln -sf "$NPM_BIN/serve" /usr/local/bin/serve
-            SERVE_PATH="/usr/local/bin/serve"
-        fi
+SERVE_PATH=$(which serve 2>/dev/null || find /usr -name serve 2>/dev/null | head -1)
+if [ -z "$SERVE_PATH" ] || [ ! -f "$SERVE_PATH" ]; then
+    # Versuche npm global bin
+    NPM_BIN=$(npm bin -g 2>/dev/null)
+    if [ -n "$NPM_BIN" ] && [ -f "$NPM_BIN/serve" ]; then
+        SERVE_PATH="$NPM_BIN/serve"
+        # Symlink erstellen
+        ln -sf "$SERVE_PATH" /usr/local/bin/serve 2>/dev/null || true
+        SERVE_PATH="/usr/local/bin/serve"
+    else
+        # Letzter Ausweg: node direkt verwenden
+        SERVE_PATH="$(which node) $(npm root -g)/serve/bin/serve.js"
     fi
 fi
 
-print_success "Frontend gebaut, serve installiert unter: $SERVE_PATH"
+print_success "Serve installiert unter: $SERVE_PATH"
 echo ""
 
 # 8. Systemd Services erstellen
