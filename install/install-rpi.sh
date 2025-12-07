@@ -156,11 +156,19 @@ echo ""
 print_info "Schritt 5/10: Anwendung wird heruntergeladen..."
 if [ -d "$INSTALL_DIR/.git" ]; then
     print_info "Repository existiert bereits, wird aktualisiert..."
-    git pull
+    cd $INSTALL_DIR
+    git fetch --all
+    git reset --hard origin/main
+    git pull origin main
 else
-    git clone https://github.com/Elemirus1996/fire-station-app.git .
+    print_info "Klone Repository..."
+    git clone https://github.com/Elemirus1996/fire-station-app.git $INSTALL_DIR
+    cd $INSTALL_DIR
 fi
-git checkout v1.0.0
+
+# Auf Version 1.0.0 wechseln
+git checkout tags/v1.0.0 -b v1.0.0-install 2>/dev/null || git checkout v1.0.0-install 2>/dev/null || git checkout main
+
 print_success "Anwendung heruntergeladen"
 echo ""
 
