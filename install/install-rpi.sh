@@ -265,23 +265,82 @@ fi
 
 # Datenbank initialisieren und mit Seed-Daten füllen
 print_info "Initialisiere Datenbank..."
-python3 << PYTHON_INIT
+
+# Stelle sicher dass venv aktiviert ist
+if [ -z "$VIRTUAL_ENV" ]; then
+    source venv/bin/activate
+fi
+
+# Verwende Python aus dem venv
+VENV_PYTHON="$(pwd)/venv/bin/python3"
+
+# Führe Initialisierung aus
+$VENV_PYTHON << 'PYTHON_INIT'
+import sys
+import os
+
+# Sicherstellen dass wir im richtigen Verzeichnis sind
+backend_dir = os.getcwd()
+sys.path.insert(0, backend_dir)
+
+print(f"Python: {sys.version}")
+print(f"Working Dir: {backend_dir}")
+print(f"Sys Path: {sys.path[:3]}")
+
 try:
+    print("\nImportiere Module...")
     from app.database import init_db
     from app.seed import seed_initial_data
+    print("✓ Module erfolgreich importiert")
     
     # Tabellen erstellen
+    print("\nErstelle Datenbank-Tabellen...")
     init_db()
     print("✓ Datenbank-Tabellen erstellt")
     
     # Seed-Daten einfügen
+    print("\nFüge Dummy-Daten ein...")
     seed_initial_data()
-    print("✓ Dummy-Daten eingefügt (Admin: admin / feuerwehr2025)")
+    print("✓ Dummy-Daten eingefügt")
+    print("   - Admin: admin / feuerwehr2025")
+    print("   - 10 Test-Personen")
+    print("   - 4 Gruppen (Jugend, Aktive, Altersabteilung, Ehrenabteilung)")
+    print("   - Standard-Trainings")
     
+except ImportError as e:
+    print(f"\n❌ Import-Fehler: {e}")
+    print("Module konnten nicht geladen werden")
+    print("Bitte prüfen Sie die Installation der Python-Pakete")
+    sys.exit(1)
 except Exception as e:
-    print(f"Warnung: Datenbank-Initialisierung: {e}")
-    print("Datenbank wird beim ersten Start automatisch erstellt")
+    print(f"\n❌ Fehler bei Datenbank-Initialisierung: {e}")
+    import traceback
+    traceback.print_exc()
+    print("")
+    print("⚠️  WICHTIG: Datenbank wird beim ersten Start automatisch erstellt")
+    print("")
+    print("Falls Fehler auftreten, bitte manuell ausführen:")
+    print("  cd /opt/feuerwehr-app/backend")
+    print("  source venv/bin/activate")
+    print("  python3 << EOF")
+    print("from app.database import init_db")
+    print("from app.seed import seed_initial_data")
+    print("init_db()")
+    print("seed_initial_data()")
+    print("EOF")
+    # Nicht abbrechen, da beim Startup nochmal versucht wird
 PYTHON_INIT
+
+# Prüfe ob Datenbank erstellt wurde
+if [ -f "fire_station.db" ]; then
+    print_success "Datenbank-Datei erstellt: fire_station.db"
+    # Zeige Größe
+    DB_SIZE=$(du -h fire_station.db | cut -f1)
+    print_info "Datenbank-Größe: $DB_SIZE"
+else
+    print_info "Warnung: Datenbank-Datei nicht gefunden"
+    print_info "Sie wird beim ersten Start automatisch erstellt"
+fi
 
 deactivate
 print_success "Backend eingerichtet"
