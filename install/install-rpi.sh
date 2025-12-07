@@ -250,9 +250,34 @@ cat > .env << EOF
 VITE_API_BASE_URL=http://${IP_ADDRESS}:8000
 EOF
 
-npm install
-npm run build
-print_success "Frontend gebaut"
+# Node modules installieren
+print_info "Installiere Node.js Dependencies (das kann einige Minuten dauern)..."
+npm install 2>&1 | tee -a "$LOGFILE"
+
+# Frontend bauen
+print_info "Baue Frontend..."
+npm run build 2>&1 | tee -a "$LOGFILE"
+
+# Serve global installieren (mit korrektem Pfad)
+print_info "Installiere serve für Frontend-Hosting..."
+npm install -g serve 2>&1 | tee -a "$LOGFILE"
+
+# Serve-Pfad ermitteln
+SERVE_PATH=$(which serve 2>/dev/null || echo "/usr/bin/serve")
+if [ ! -f "$SERVE_PATH" ]; then
+    # Versuche alternativen Pfad
+    SERVE_PATH="/usr/local/bin/serve"
+    if [ ! -f "$SERVE_PATH" ]; then
+        # Erstelle Symlink falls serve woanders installiert ist
+        NPM_BIN=$(npm bin -g)
+        if [ -f "$NPM_BIN/serve" ]; then
+            ln -sf "$NPM_BIN/serve" /usr/local/bin/serve
+            SERVE_PATH="/usr/local/bin/serve"
+        fi
+    fi
+fi
+
+print_success "Frontend gebaut, serve installiert unter: $SERVE_PATH"
 echo ""
 
 # 8. Systemd Services erstellen
@@ -268,18 +293,18 @@ After=network.target
 Type=simple
 User=root
 WorkingDirectory=$INSTALL_DIR/backend
-Environment="PATH=$INSTALL_DIR/backend/venv/bin"
+Environment="PATH=$INSTALL_DIR/backend/venv/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
 ExecStart=$INSTALL_DIR/backend/venv/bin/python main.py
 Restart=always
 RestartSec=10
+StandardOutput=journal
+StandardError=journal
 
 [Install]
 WantedBy=multi-user.target
 EOF
 
-# Frontend Service (mit serve)
-npm install -g serve
-
+# Frontend Service (mit ermitteltem serve-Pfad)
 cat > /etc/systemd/system/feuerwehr-frontend.service << EOF
 [Unit]
 Description=Feuerwehr Anwesenheitssystem Frontend
@@ -289,9 +314,12 @@ After=network.target feuerwehr-backend.service
 Type=simple
 User=root
 WorkingDirectory=$INSTALL_DIR/frontend
-ExecStart=/usr/local/bin/serve -s dist -l 5173
+Environment="PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
+ExecStart=${SERVE_PATH} -s dist -l 5173
 Restart=always
 RestartSec=10
+StandardOutput=journal
+StandardError=journal
 
 [Install]
 WantedBy=multi-user.target
@@ -301,10 +329,31 @@ EOF
 systemctl daemon-reload
 systemctl enable feuerwehr-backend.service
 systemctl enable feuerwehr-frontend.service
-systemctl start feuerwehr-backend.service
-systemctl start feuerwehr-frontend.service
 
-print_success "Systemdienste erstellt und gestartet"
+print_info "Starte Backend-Service..."
+systemctl restart feuerwehr-backend.service
+sleep 3
+
+print_info "Starte Frontend-Service..."
+systemctl restart feuerwehr-frontend.service
+sleep 3
+
+# Status prüfen
+if systemctl is-active --quiet feuerwehr-backend.service; then
+    print_success "Backend-Service läuft"
+else
+    print_error "Backend-Service konnte nicht gestartet werden"
+    print_info "Prüfe Logs mit: sudo journalctl -u feuerwehr-backend -n 50"
+fi
+
+if systemctl is-active --quiet feuerwehr-frontend.service; then
+    print_success "Frontend-Service läuft"
+else
+    print_error "Frontend-Service konnte nicht gestartet werden"
+    print_info "Prüfe Logs mit: sudo journalctl -u feuerwehr-frontend -n 50"
+fi
+
+print_success "Systemdienste konfiguriert"
 echo ""
 
 # 9. Kiosk-Modus einrichten
