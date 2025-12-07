@@ -106,18 +106,18 @@ const Screensaver = ({ onActivity }) => {
 
       {/* Main Content Area - Centered */}
       <div className="flex-1 flex flex-col items-center justify-center px-8 py-12">
-        {/* Logo */}
-        {fireStationInfo?.logo_path && (
+        {/* Logo - Always try to load if fireStationInfo is available */}
+        {fireStationInfo && (
           <div className="mb-8 animate-fadeIn">
             <img
               src={`/api/settings/firestation/logo?t=${Date.now()}`}
               alt="Feuerwehr Logo"
               className="h-48 w-auto drop-shadow-2xl max-w-md object-contain"
               onError={(e) => { 
-                console.error('Logo konnte nicht geladen werden:', fireStationInfo.logo_path);
+                console.error('Logo konnte nicht geladen werden');
                 e.target.style.display = 'none'; 
               }}
-              onLoad={() => console.log('Logo erfolgreich geladen')}
+              onLoad={() => console.log('Logo erfolgreich im Screensaver geladen')}
             />
           </div>
         )}

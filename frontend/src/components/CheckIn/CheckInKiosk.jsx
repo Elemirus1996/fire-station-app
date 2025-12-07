@@ -401,7 +401,7 @@ const CheckInKiosk = () => {
           <div className="max-w-md mx-auto">
             {/* Header */}
             <div className="bg-white rounded-3xl shadow-2xl p-6 mb-4">
-              {fireStationInfo?.logo_path && (
+              {fireStationInfo && (
                 <div className="flex justify-center mb-4">
                   <img
                     src={`/api/settings/firestation/logo?t=${Date.now()}`}
@@ -504,7 +504,7 @@ const CheckInKiosk = () => {
             <div className="bg-white rounded-2xl shadow-xl p-4 mb-3">
               <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
                 <div className="flex items-center space-x-4">
-                  {fireStationInfo?.logo_path && (
+                  {fireStationInfo && (
                     <img
                       src={`/api/settings/firestation/logo?t=${Date.now()}`}
                       alt="Feuerwehr Logo"
