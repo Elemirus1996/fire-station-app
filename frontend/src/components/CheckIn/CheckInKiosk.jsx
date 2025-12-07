@@ -63,7 +63,9 @@ const CheckInKiosk = () => {
       }, timeout);
     };
 
-    const events = ['mousedown', 'mousemove', 'keydown', 'scroll', 'touchstart'];
+    // Nur echte Interaktionen zählen - NICHT mousemove!
+    // mousemove würde den Timer bei jeder kleinsten Bewegung zurücksetzen
+    const events = ['mousedown', 'keydown', 'touchstart', 'click'];
     events.forEach(event => window.addEventListener(event, resetTimer, { passive: true }));
     resetTimer();
 
