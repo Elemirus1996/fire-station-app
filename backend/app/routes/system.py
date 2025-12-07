@@ -223,6 +223,38 @@ async def restart_system(
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Neustart fehlgeschlagen: {str(e)}")
 
+@router.post("/reboot")
+async def reboot_system(
+    db: Session = Depends(get_db),
+    current_user: AdminUser = Depends(get_current_user)
+):
+    """Reboot the entire system (Raspberry Pi)"""
+    check_permission(current_user, "settings:update")
+    
+    try:
+        # Schedule system reboot immediately
+        subprocess.Popen(['sudo', 'shutdown', '-r', 'now'])
+        
+        return {"message": "System wird neu gestartet..."}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Reboot fehlgeschlagen: {str(e)}")
+
+@router.get("/health")
+async def reboot_system(
+    db: Session = Depends(get_db),
+    current_user: AdminUser = Depends(get_current_user)
+):
+    """Reboot the entire system (Raspberry Pi)"""
+    check_permission(current_user, "settings:update")
+    
+    try:
+        # Schedule system reboot in 5 seconds to allow response to be sent
+        subprocess.Popen(['sudo', 'shutdown', '-r', '+0'])
+        
+        return {"message": "System wird neu gestartet..."}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Reboot fehlgeschlagen: {str(e)}")
+
 @router.get("/health")
 async def health_check():
     """Health check endpoint"""

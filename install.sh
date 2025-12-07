@@ -316,6 +316,8 @@ root ALL=(ALL) NOPASSWD: /bin/systemctl restart fire-station-backend
 root ALL=(ALL) NOPASSWD: /bin/systemctl restart fire-station-frontend
 root ALL=(ALL) NOPASSWD: /bin/systemctl status fire-station-backend
 root ALL=(ALL) NOPASSWD: /bin/systemctl status fire-station-frontend
+root ALL=(ALL) NOPASSWD: /usr/sbin/shutdown -r now
+root ALL=(ALL) NOPASSWD: /sbin/shutdown -r now
 EOF
 chmod 440 $SUDOERS_FILE
 print_success "Sudo-Rechte konfiguriert"

@@ -102,6 +102,30 @@ const SystemUpdate = () => {
     }
   };
 
+  const handleReboot = async () => {
+    if (!window.confirm('Möchten Sie den Raspberry Pi wirklich neu starten? Dies dauert ca. 1-2 Minuten.')) {
+      return;
+    }
+
+    try {
+      await api.post('/system/reboot');
+      setMessage({ 
+        text: 'Raspberry Pi wird neu gestartet... Bitte warten Sie ca. 2 Minuten.', 
+        type: 'success' 
+      });
+      
+      // Try to reload after 2 minutes
+      setTimeout(() => {
+        window.location.reload();
+      }, 120000);
+    } catch (error) {
+      setMessage({ 
+        text: error.response?.data?.detail || 'Fehler beim Neustart des Systems', 
+        type: 'error' 
+      });
+    }
+  };
+
   if (loading && !versionInfo) {
     return <div className="text-center py-8">Laden...</div>;
   }
@@ -187,11 +211,11 @@ const SystemUpdate = () => {
           </button>
 
           <button
-            onClick={handleRestart}
+            onClick={handleReboot}
             disabled={updating}
             className="px-6 py-3 bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition-all font-bold disabled:bg-gray-300"
           >
-            🔁 Neu starten
+            🔁 System Neustart
           </button>
         </div>
 
