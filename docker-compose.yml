@@ -12,7 +12,11 @@ services:
       - ./fire_station.db:/app/fire_station.db
     environment:
       - DATABASE_URL=sqlite:///./fire_station.db
+      - SECRET_KEY=feuerwehr-geheim-schluessel-2025-produktiv
+      - CORS_ORIGINS=http://localhost:5173,http://localhost:3000,http://frontend:5173
     restart: unless-stopped
+    networks:
+      - fire-station-network
 
   frontend:
     build: ./frontend
@@ -21,6 +25,14 @@ services:
     volumes:
       - ./frontend:/app
       - /app/node_modules
+    environment:
+      - VITE_API_BASE_URL=http://backend:8000
     depends_on:
       - backend
     restart: unless-stopped
+    networks:
+      - fire-station-network
+
+networks:
+  fire-station-network:
+    driver: bridge
