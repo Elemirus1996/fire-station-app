@@ -29,11 +29,18 @@ body {
   --font-size-base: 24px;
 }
 
-/* Touch-optimized buttons */
+/* Touch-optimized buttons - responsive sizing */
 .touch-button {
-  min-width: 60px;
-  min-height: 60px;
+  min-width: 50px;
+  min-height: 50px;
   touch-action: manipulation;
+}
+
+@media (min-width: 640px) {
+  .touch-button {
+    min-width: 60px;
+    min-height: 60px;
+  }
 }
 
 /* High contrast mode */

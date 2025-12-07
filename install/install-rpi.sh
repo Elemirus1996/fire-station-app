@@ -232,13 +232,21 @@ else
     }
 fi
 
-# Datenbank initialisieren
+# Datenbank initialisieren und mit Seed-Daten füllen
 print_info "Initialisiere Datenbank..."
 python3 << PYTHON_INIT
 try:
     from app.database import init_db
+    from app.seed import seed_initial_data
+    
+    # Tabellen erstellen
     init_db()
-    print("Datenbank erfolgreich initialisiert")
+    print("✓ Datenbank-Tabellen erstellt")
+    
+    # Seed-Daten einfügen
+    seed_initial_data()
+    print("✓ Dummy-Daten eingefügt (Admin: admin / feuerwehr2025)")
+    
 except Exception as e:
     print(f"Warnung: Datenbank-Initialisierung: {e}")
     print("Datenbank wird beim ersten Start automatisch erstellt")

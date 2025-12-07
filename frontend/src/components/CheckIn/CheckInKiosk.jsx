@@ -446,21 +446,21 @@ const CheckInKiosk = () => {
         <div className="p-4">
           <div className="max-w-7xl mx-auto">
             {/* Header */}
-            <div className="bg-white rounded-3xl shadow-2xl p-6 mb-4">
-              <div className="flex justify-between items-center">
+            <div className="bg-white rounded-2xl shadow-xl p-4 mb-3">
+              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
                 <div>
-                  <h1 className="text-4xl font-bold text-fire-red">Feuerwehr Check-In</h1>
+                  <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-fire-red">Feuerwehr Check-In</h1>
                   {selectedSession && (
-                    <p className="text-xl text-gray-600 mt-2">
+                    <p className="text-sm sm:text-base lg:text-xl text-gray-600 mt-1">
                       {selectedSession.event_type} - {new Date(selectedSession.started_at).toLocaleDateString('de-DE')}
                     </p>
                   )}
               </div>
-              <div className="flex space-x-3">
+              <div className="flex space-x-2 w-full sm:w-auto">
                 {selectedSession && selectedSession.event_type === 'Einsatz' && (
                   <button
                     onClick={() => setShowEndSessionModal(true)}
-                    className="bg-red-600 text-white px-6 py-3 rounded-xl hover:bg-red-700 transition-all font-bold shadow-lg"
+                    className="bg-red-600 text-white px-3 sm:px-4 py-2 sm:py-3 rounded-lg text-sm sm:text-base hover:bg-red-700 transition-all font-bold shadow-lg flex-1 sm:flex-none"
                   >
                     🚨 Einsatz beenden
                   </button>
@@ -468,7 +468,7 @@ const CheckInKiosk = () => {
                 {sessions.length > 1 && (
                   <button
                     onClick={() => setShowSessionSelect(true)}
-                    className="bg-gray-500 text-white px-6 py-3 rounded-xl hover:bg-gray-600 transition-all"
+                    className="bg-gray-500 text-white px-3 sm:px-4 py-2 sm:py-3 rounded-lg text-sm sm:text-base hover:bg-gray-600 transition-all flex-1 sm:flex-none"
                   >
                     Session wechseln
                   </button>
@@ -481,21 +481,21 @@ const CheckInKiosk = () => {
           {systemSettings?.kiosk_show_attendance_list ? (
             <>
               {/* Top Section: Input Field and Attendance List side by side */}
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-4">
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 mb-3">
                 {/* Keypad Section */}
-                <div className="bg-white rounded-3xl shadow-2xl p-8">
-                  <h2 className="text-2xl font-bold text-fire-red mb-6">Stammrollennummer eingeben</h2>
+                <div className="bg-white rounded-2xl shadow-xl p-4">
+                  <h2 className="text-lg sm:text-xl font-bold text-fire-red mb-3">Stammrollennummer eingeben</h2>
                   
                   {/* Display */}
-                  <div className="bg-gray-100 rounded-xl p-6 mb-6 min-h-[80px] flex items-center justify-center">
-                    <span className="text-4xl font-mono font-bold text-fire-red">
+                  <div className="bg-gray-100 rounded-lg p-3 mb-3 min-h-[60px] flex items-center justify-center">
+                    <span className="text-2xl sm:text-3xl font-mono font-bold text-fire-red">
                       {number || '____'}
                     </span>
                   </div>
 
                   {/* Message */}
                   {message.text && (
-                    <div className={`p-4 rounded-xl mb-6 text-center text-lg font-semibold ${
+                    <div className={`p-3 rounded-lg mb-3 text-center text-sm sm:text-base font-semibold ${
                       message.type === 'success' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
                     }`}>
                       {message.text}
@@ -503,31 +503,31 @@ const CheckInKiosk = () => {
                   )}
 
                   {/* Keypad */}
-                  <div className="grid grid-cols-3 gap-4 mb-6">
+                  <div className="grid grid-cols-3 gap-2 sm:gap-3 mb-3">
                     {[1, 2, 3, 4, 5, 6, 7, 8, 9].map((digit) => (
                       <button
                         key={digit}
                         onClick={() => handleNumberClick(digit.toString())}
-                        className="touch-button bg-fire-red text-white text-3xl font-bold rounded-2xl hover:bg-red-800 transition-all shadow-lg"
+                        className="touch-button bg-fire-red text-white text-xl sm:text-2xl font-bold rounded-lg sm:rounded-xl hover:bg-red-800 transition-all shadow-lg min-h-[50px] sm:min-h-[60px]"
                       >
                         {digit}
                       </button>
                     ))}
                     <button
                       onClick={handleClear}
-                      className="touch-button bg-gray-500 text-white text-2xl font-bold rounded-2xl hover:bg-gray-600 transition-all shadow-lg"
+                      className="touch-button bg-gray-500 text-white text-lg sm:text-xl font-bold rounded-lg sm:rounded-xl hover:bg-gray-600 transition-all shadow-lg min-h-[50px] sm:min-h-[60px]"
                     >
                       ⌫
                     </button>
                     <button
                       onClick={() => handleNumberClick('0')}
-                      className="touch-button bg-fire-red text-white text-3xl font-bold rounded-2xl hover:bg-red-800 transition-all shadow-lg"
+                      className="touch-button bg-fire-red text-white text-xl sm:text-2xl font-bold rounded-lg sm:rounded-xl hover:bg-red-800 transition-all shadow-lg min-h-[50px] sm:min-h-[60px]"
                     >
                       0
                     </button>
                     <button
                       onClick={handleSubmit}
-                      className="touch-button bg-green-600 text-white text-2xl font-bold rounded-2xl hover:bg-green-700 transition-all shadow-lg"
+                      className="touch-button bg-green-600 text-white text-lg sm:text-xl font-bold rounded-lg sm:rounded-xl hover:bg-green-700 transition-all shadow-lg min-h-[50px] sm:min-h-[60px]"
                     >
                       ✓
                     </button>
@@ -535,28 +535,28 @@ const CheckInKiosk = () => {
                 </div>
 
                 {/* Active Personnel List */}
-                <div className="bg-white rounded-3xl shadow-2xl p-8">
-                  <h2 className="text-2xl font-bold text-fire-red mb-6">
+                <div className="bg-white rounded-2xl shadow-xl p-4">
+                  <h2 className="text-lg sm:text-xl font-bold text-fire-red mb-3">
                     Aktuell anwesend ({activePersonnel.length})
                   </h2>
-                  <div className="space-y-3 max-h-[600px] overflow-y-auto">
+                  <div className="space-y-2 max-h-[400px] sm:max-h-[500px] overflow-y-auto">
                     {activePersonnel.length === 0 ? (
-                      <p className="text-gray-500 text-center py-8">Noch niemand eingecheckt</p>
+                      <p className="text-gray-500 text-center py-4 text-sm">Noch niemand eingecheckt</p>
                     ) : (
                       activePersonnel.map((person) => (
                         <div
                           key={person.attendance_id}
-                          className="bg-gray-50 rounded-xl p-4 flex justify-between items-center hover:bg-gray-100 transition-all"
+                          className="bg-gray-50 rounded-lg p-3 flex justify-between items-center hover:bg-gray-100 transition-all"
                         >
                           <div>
-                            <div className="font-bold text-lg text-fire-red">
+                            <div className="font-bold text-sm sm:text-base text-fire-red">
                               {person.vorname} {person.nachname}
                             </div>
-                            <div className="text-sm text-gray-600">
+                            <div className="text-xs sm:text-sm text-gray-600">
                               {person.dienstgrad_name} • Nr. {person.stammrollennummer}
                             </div>
                           </div>
-                          <div className="text-sm text-gray-500">
+                          <div className="text-xs sm:text-sm text-gray-500">
                             {new Date(person.checked_in_at).toLocaleTimeString('de-DE', {
                               hour: '2-digit',
                               minute: '2-digit'
@@ -570,15 +570,15 @@ const CheckInKiosk = () => {
               </div>
 
               {/* Divider */}
-              <div className="flex items-center my-6">
+              <div className="flex items-center my-3">
                 <div className="flex-1 border-t-2 border-white opacity-50"></div>
-                <span className="px-4 text-white text-xl font-bold">ODER</span>
+                <span className="px-3 text-white text-sm sm:text-base font-bold">ODER</span>
                 <div className="flex-1 border-t-2 border-white opacity-50"></div>
               </div>
 
               {/* Bottom Section: QR Code centered */}
               <div className="flex justify-center">
-                <div className="bg-white rounded-3xl shadow-2xl p-8">
+                <div className="bg-white rounded-2xl shadow-xl p-4 sm:p-6">
                   <SessionQRCode 
                     sessionId={selectedSession?.id}
                     large={true}
@@ -588,21 +588,21 @@ const CheckInKiosk = () => {
             </>
           ) : (
             /* Layout when attendance list is hidden: Input and QR side by side */
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 max-w-6xl mx-auto">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 max-w-6xl mx-auto">
               {/* Keypad Section */}
-              <div className="bg-white rounded-3xl shadow-2xl p-8">
-                <h2 className="text-2xl font-bold text-fire-red mb-6">Stammrollennummer eingeben</h2>
+              <div className="bg-white rounded-2xl shadow-xl p-4">
+                <h2 className="text-lg sm:text-xl font-bold text-fire-red mb-3">Stammrollennummer eingeben</h2>
                 
                 {/* Display */}
-                <div className="bg-gray-100 rounded-xl p-6 mb-6 min-h-[80px] flex items-center justify-center">
-                  <span className="text-4xl font-mono font-bold text-fire-red">
+                <div className="bg-gray-100 rounded-lg p-3 mb-3 min-h-[60px] flex items-center justify-center">
+                  <span className="text-2xl sm:text-3xl font-mono font-bold text-fire-red">
                     {number || '____'}
                   </span>
                 </div>
 
                 {/* Message */}
                 {message.text && (
-                  <div className={`p-4 rounded-xl mb-6 text-center text-lg font-semibold ${
+                  <div className={`p-3 rounded-lg mb-3 text-center text-sm sm:text-base font-semibold ${
                     message.type === 'success' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
                   }`}>
                     {message.text}
@@ -610,31 +610,31 @@ const CheckInKiosk = () => {
                 )}
 
                 {/* Keypad */}
-                <div className="grid grid-cols-3 gap-4 mb-6">
+                <div className="grid grid-cols-3 gap-2 sm:gap-3 mb-3">
                   {[1, 2, 3, 4, 5, 6, 7, 8, 9].map((digit) => (
                     <button
                       key={digit}
                       onClick={() => handleNumberClick(digit.toString())}
-                      className="touch-button bg-fire-red text-white text-3xl font-bold rounded-2xl hover:bg-red-800 transition-all shadow-lg"
+                      className="touch-button bg-fire-red text-white text-xl sm:text-2xl font-bold rounded-lg sm:rounded-xl hover:bg-red-800 transition-all shadow-lg min-h-[50px] sm:min-h-[60px]"
                     >
                       {digit}
                     </button>
                   ))}
                   <button
                     onClick={handleClear}
-                    className="touch-button bg-gray-500 text-white text-2xl font-bold rounded-2xl hover:bg-gray-600 transition-all shadow-lg"
+                    className="touch-button bg-gray-500 text-white text-lg sm:text-xl font-bold rounded-lg sm:rounded-xl hover:bg-gray-600 transition-all shadow-lg min-h-[50px] sm:min-h-[60px]"
                   >
                     ⌫
                   </button>
                   <button
                     onClick={() => handleNumberClick('0')}
-                    className="touch-button bg-fire-red text-white text-3xl font-bold rounded-2xl hover:bg-red-800 transition-all shadow-lg"
+                    className="touch-button bg-fire-red text-white text-xl sm:text-2xl font-bold rounded-lg sm:rounded-xl hover:bg-red-800 transition-all shadow-lg min-h-[50px] sm:min-h-[60px]"
                   >
                     0
                   </button>
                   <button
                     onClick={handleSubmit}
-                    className="touch-button bg-green-600 text-white text-2xl font-bold rounded-2xl hover:bg-green-700 transition-all shadow-lg"
+                    className="touch-button bg-green-600 text-white text-lg sm:text-xl font-bold rounded-lg sm:rounded-xl hover:bg-green-700 transition-all shadow-lg min-h-[50px] sm:min-h-[60px]"
                   >
                     ✓
                   </button>
@@ -642,7 +642,7 @@ const CheckInKiosk = () => {
               </div>
 
               {/* QR Code Section */}
-              <div className="bg-white rounded-3xl shadow-2xl p-8 flex flex-col items-center justify-center">
+              <div className="bg-white rounded-2xl shadow-xl p-4 sm:p-6 flex flex-col items-center justify-center">
                 <SessionQRCode 
                   sessionId={selectedSession?.id}
                   large={true}
@@ -654,67 +654,67 @@ const CheckInKiosk = () => {
           {/* End Session Modal */}
           {showEndSessionModal && (
             <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-              <div className="bg-white rounded-3xl p-8 max-w-2xl w-full shadow-2xl">
-                <h3 className="text-3xl font-bold text-fire-red mb-6">Einsatz beenden</h3>
+              <div className="bg-white rounded-2xl p-4 sm:p-6 max-w-xl w-full shadow-2xl">
+                <h3 className="text-xl sm:text-2xl font-bold text-fire-red mb-3">Einsatz beenden</h3>
                 
-                <p className="text-gray-700 mb-6 text-lg">
+                <p className="text-gray-700 mb-4 text-sm sm:text-base">
                   Zum Beenden des Einsatzes ist mindestens der Dienstgrad <strong>Unterbrandmeister (UBM)</strong> erforderlich.
                 </p>
 
                 {/* Number Display */}
-                <div className="mb-6">
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                <div className="mb-3">
+                  <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-2">
                     Stammrollennummer eingeben
                   </label>
-                  <div className="w-full px-6 py-6 bg-gray-100 border-4 border-fire-red rounded-2xl text-6xl text-center font-mono font-bold text-gray-800">
+                  <div className="w-full px-3 sm:px-4 py-3 sm:py-4 bg-gray-100 border-2 sm:border-4 border-fire-red rounded-lg sm:rounded-xl text-2xl sm:text-4xl text-center font-mono font-bold text-gray-800">
                     {endSessionNumber || '____'}
                   </div>
                 </div>
 
                 {/* Number Pad */}
-                <div className="grid grid-cols-3 gap-3 mb-6">
+                <div className="grid grid-cols-3 gap-2 mb-3">
                   {[1, 2, 3, 4, 5, 6, 7, 8, 9].map((num) => (
                     <button
                       key={num}
                       onClick={() => setEndSessionNumber(prev => prev + num)}
-                      className="bg-fire-red text-white text-4xl font-bold py-6 rounded-2xl hover:bg-red-700 transition-all shadow-lg active:scale-95"
+                      className="bg-fire-red text-white text-xl sm:text-2xl font-bold py-3 sm:py-4 rounded-lg sm:rounded-xl hover:bg-red-700 transition-all shadow-lg active:scale-95"
                     >
                       {num}
                     </button>
                   ))}
                   <button
                     onClick={() => setEndSessionNumber('')}
-                    className="bg-gray-400 text-white text-2xl font-bold py-6 rounded-2xl hover:bg-gray-500 transition-all shadow-lg active:scale-95"
+                    className="bg-gray-400 text-white text-sm sm:text-base font-bold py-3 sm:py-4 rounded-lg sm:rounded-xl hover:bg-gray-500 transition-all shadow-lg active:scale-95"
                   >
                     ⌫ Löschen
                   </button>
                   <button
                     onClick={() => setEndSessionNumber(prev => prev + '0')}
-                    className="bg-fire-red text-white text-4xl font-bold py-6 rounded-2xl hover:bg-red-700 transition-all shadow-lg active:scale-95"
+                    className="bg-fire-red text-white text-xl sm:text-2xl font-bold py-3 sm:py-4 rounded-lg sm:rounded-xl hover:bg-red-700 transition-all shadow-lg active:scale-95"
                   >
                     0
                   </button>
                   <button
                     onClick={() => setEndSessionNumber(prev => prev.slice(0, -1))}
-                    className="bg-gray-400 text-white text-2xl font-bold py-6 rounded-2xl hover:bg-gray-500 transition-all shadow-lg active:scale-95"
+                    className="bg-gray-400 text-white text-sm sm:text-base font-bold py-3 sm:py-4 rounded-lg sm:rounded-xl hover:bg-gray-500 transition-all shadow-lg active:scale-95"
                   >
                     ← Zurück
                   </button>
                 </div>
 
                 {message.text && (
-                  <div className={`p-4 rounded-xl mb-6 text-center font-semibold text-lg ${
+                  <div className={`p-3 rounded-lg mb-3 text-center font-semibold text-sm sm:text-base ${
                     message.type === 'success' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
                   }`}>
                     {message.text}
                   </div>
                 )}
 
-                <div className="flex space-x-3">
+                <div className="flex space-x-2">
                   <button
                     onClick={handleEndSession}
                     disabled={!endSessionNumber}
-                    className="flex-1 bg-red-600 text-white py-4 rounded-xl hover:bg-red-700 transition-all font-bold text-xl disabled:bg-gray-300 disabled:cursor-not-allowed"
+                    className="flex-1 bg-red-600 text-white py-3 rounded-lg hover:bg-red-700 transition-all font-bold text-sm sm:text-base disabled:bg-gray-300 disabled:cursor-not-allowed"
                   >
                     ✓ Einsatz beenden
                   </button>
@@ -724,7 +724,7 @@ const CheckInKiosk = () => {
                       setEndSessionNumber('');
                       setMessage({ text: '', type: '' });
                     }}
-                    className="flex-1 bg-gray-300 text-gray-700 py-4 rounded-xl hover:bg-gray-400 transition-all font-bold text-xl"
+                    className="flex-1 bg-gray-300 text-gray-700 py-3 rounded-lg hover:bg-gray-400 transition-all font-bold text-sm sm:text-base"
                   >
                     ✕ Abbrechen
                   </button>
@@ -737,4 +737,6 @@ const CheckInKiosk = () => {
       </div>
     </>
   );
-};export default CheckInKiosk;
+};
+
+export default CheckInKiosk;
