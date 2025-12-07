@@ -239,7 +239,11 @@ const CheckInKiosk = () => {
 
   if (showSessionSelect && sessions.length === 0) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-fire-red to-fire-orange flex items-center justify-center p-8">
+      <>
+        {/* Screensaver */}
+        {showScreensaver && <Screensaver onActivity={handleScreensaverActivity} />}
+        
+        <div className="min-h-screen bg-gradient-to-br from-fire-red to-fire-orange flex items-center justify-center p-8">
         <div className="bg-white rounded-3xl shadow-2xl p-12 max-w-4xl w-full">
           <h1 className="text-4xl font-bold text-fire-red text-center mb-8">
             Neue Session starten
@@ -285,12 +289,17 @@ const CheckInKiosk = () => {
           )}
         </div>
       </div>
+      </>
     );
   }
 
   if (showSessionSelect && sessions.length > 1) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-fire-red to-fire-orange">
+      <>
+        {/* Screensaver */}
+        {showScreensaver && <Screensaver onActivity={handleScreensaverActivity} />}
+        
+        <div className="min-h-screen bg-gradient-to-br from-fire-red to-fire-orange">
         {/* News Banner */}
         <NewsBanner />
         
@@ -322,13 +331,18 @@ const CheckInKiosk = () => {
         </div>
         </div>
       </div>
+      </>
     );
   }
 
   // Mobile QR View - Only show input field
   if (isMobileQRView && selectedSession) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-fire-red to-fire-orange">
+      <>
+        {/* Screensaver */}
+        {showScreensaver && <Screensaver onActivity={handleScreensaverActivity} />}
+        
+        <div className="min-h-screen bg-gradient-to-br from-fire-red to-fire-orange">
         {/* News Banner */}
         <NewsBanner />
         
@@ -410,6 +424,7 @@ const CheckInKiosk = () => {
           </div>
         </div>
       </div>
+      </>
     );
   }
 
@@ -636,29 +651,56 @@ const CheckInKiosk = () => {
           {/* End Session Modal */}
           {showEndSessionModal && (
             <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-              <div className="bg-white rounded-3xl p-8 max-w-md w-full shadow-2xl">
-                <h3 className="text-2xl font-bold text-fire-red mb-6">Einsatz beenden</h3>
+              <div className="bg-white rounded-3xl p-8 max-w-2xl w-full shadow-2xl">
+                <h3 className="text-3xl font-bold text-fire-red mb-6">Einsatz beenden</h3>
                 
-                <p className="text-gray-700 mb-6">
+                <p className="text-gray-700 mb-6 text-lg">
                   Zum Beenden des Einsatzes ist mindestens der Dienstgrad <strong>Unterbrandmeister (UBM)</strong> erforderlich.
                 </p>
 
+                {/* Number Display */}
                 <div className="mb-6">
                   <label className="block text-sm font-medium text-gray-700 mb-2">
                     Stammrollennummer eingeben
                   </label>
-                  <input
-                    type="text"
-                    value={endSessionNumber}
-                    onChange={(e) => setEndSessionNumber(e.target.value)}
-                    className="w-full px-4 py-3 border-2 border-gray-300 rounded-xl text-2xl text-center font-mono focus:ring-2 focus:ring-fire-red focus:border-transparent"
-                    placeholder="____"
-                    autoFocus
-                  />
+                  <div className="w-full px-6 py-6 bg-gray-100 border-4 border-fire-red rounded-2xl text-6xl text-center font-mono font-bold text-gray-800">
+                    {endSessionNumber || '____'}
+                  </div>
+                </div>
+
+                {/* Number Pad */}
+                <div className="grid grid-cols-3 gap-3 mb-6">
+                  {[1, 2, 3, 4, 5, 6, 7, 8, 9].map((num) => (
+                    <button
+                      key={num}
+                      onClick={() => setEndSessionNumber(prev => prev + num)}
+                      className="bg-fire-red text-white text-4xl font-bold py-6 rounded-2xl hover:bg-red-700 transition-all shadow-lg active:scale-95"
+                    >
+                      {num}
+                    </button>
+                  ))}
+                  <button
+                    onClick={() => setEndSessionNumber('')}
+                    className="bg-gray-400 text-white text-2xl font-bold py-6 rounded-2xl hover:bg-gray-500 transition-all shadow-lg active:scale-95"
+                  >
+                    ⌫ Löschen
+                  </button>
+                  <button
+                    onClick={() => setEndSessionNumber(prev => prev + '0')}
+                    className="bg-fire-red text-white text-4xl font-bold py-6 rounded-2xl hover:bg-red-700 transition-all shadow-lg active:scale-95"
+                  >
+                    0
+                  </button>
+                  <button
+                    onClick={() => setEndSessionNumber(prev => prev.slice(0, -1))}
+                    className="bg-gray-400 text-white text-2xl font-bold py-6 rounded-2xl hover:bg-gray-500 transition-all shadow-lg active:scale-95"
+                  >
+                    ← Zurück
+                  </button>
                 </div>
 
                 {message.text && (
-                  <div className={`p-4 rounded-xl mb-6 text-center font-semibold ${
+                  <div className={`p-4 rounded-xl mb-6 text-center font-semibold text-lg ${
                     message.type === 'success' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
                   }`}>
                     {message.text}
@@ -669,9 +711,9 @@ const CheckInKiosk = () => {
                   <button
                     onClick={handleEndSession}
                     disabled={!endSessionNumber}
-                    className="flex-1 bg-red-600 text-white py-3 rounded-xl hover:bg-red-700 transition-all font-bold disabled:bg-gray-300 disabled:cursor-not-allowed"
+                    className="flex-1 bg-red-600 text-white py-4 rounded-xl hover:bg-red-700 transition-all font-bold text-xl disabled:bg-gray-300 disabled:cursor-not-allowed"
                   >
-                    Einsatz beenden
+                    ✓ Einsatz beenden
                   </button>
                   <button
                     onClick={() => {
@@ -679,9 +721,9 @@ const CheckInKiosk = () => {
                       setEndSessionNumber('');
                       setMessage({ text: '', type: '' });
                     }}
-                    className="flex-1 bg-gray-300 text-gray-700 py-3 rounded-xl hover:bg-gray-400 transition-all font-bold"
+                    className="flex-1 bg-gray-300 text-gray-700 py-4 rounded-xl hover:bg-gray-400 transition-all font-bold text-xl"
                   >
-                    Abbrechen
+                    ✕ Abbrechen
                   </button>
               </div>
             </div>

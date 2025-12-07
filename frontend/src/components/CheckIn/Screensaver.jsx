@@ -84,19 +84,19 @@ const Screensaver = ({ onActivity }) => {
       onClick={handleActivity}
       onTouchStart={handleActivity}
       onMouseDown={handleActivity}
-      className="fixed inset-0 bg-gradient-to-br from-fire-red via-red-800 to-fire-orange z-[9999] flex flex-col items-center justify-center cursor-pointer"
+      className="fixed inset-0 bg-gradient-to-br from-fire-red via-red-800 to-fire-orange z-[9999] flex flex-col cursor-pointer overflow-hidden"
       style={{ isolation: 'isolate' }}
     >
-      {/* News Ticker at Top */}
+      {/* News Ticker at Top - Prominent Display */}
       {news.length > 0 && currentNews && (
-        <div className={`absolute top-0 left-0 right-0 ${getPriorityStyles(currentNews.priority)} text-white py-4 px-6 shadow-lg`}>
+        <div className={`${getPriorityStyles(currentNews.priority)} text-white py-6 px-8 shadow-2xl flex-shrink-0`}>
           <div className="max-w-7xl mx-auto">
-            <div className="flex items-center space-x-4">
-              <span className="text-lg font-bold">📢 NEWS:</span>
+            <div className="flex items-center space-x-6">
+              <span className="text-3xl font-bold">📢 WICHTIGE MITTEILUNG</span>
               <div className="flex-1">
-                <div className="font-bold text-xl">{currentNews.title}</div>
+                <div className="font-bold text-4xl mb-2">{currentNews.title}</div>
                 {currentNews.content && (
-                  <div className="text-sm mt-1 opacity-90">{currentNews.content}</div>
+                  <div className="text-2xl opacity-95">{currentNews.content}</div>
                 )}
               </div>
             </div>
@@ -104,51 +104,58 @@ const Screensaver = ({ onActivity }) => {
         </div>
       )}
 
-      {/* Logo */}
-      {systemSettings?.screensaver_show_logo && fireStationInfo?.logo_path && (
-        <div className="mb-12">
-          <img
-            src={fireStationInfo.logo_path.startsWith('/') ? fireStationInfo.logo_path : `/uploads/logo/${fireStationInfo.logo_path.split('/').pop()}`}
-            alt="Feuerwehr Logo"
-            className="h-48 w-auto drop-shadow-2xl"
-            onError={(e) => { e.target.style.display = 'none'; }}
-          />
-        </div>
-      )}
-
-      {/* Fire Station Name */}
-      {fireStationInfo?.name && (
-        <h1 className="text-6xl md:text-8xl font-bold text-white text-center mb-8 drop-shadow-2xl">
-          {fireStationInfo.name}
-        </h1>
-      )}
-
-      {/* Clock */}
-      {systemSettings?.screensaver_show_clock !== false && (
-        <div className="text-center">
-          <div className="text-9xl md:text-[12rem] font-bold text-white tabular-nums drop-shadow-2xl">
-            {time.toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' })}
+      {/* Main Content Area - Centered */}
+      <div className="flex-1 flex flex-col items-center justify-center px-8 py-12">
+        {/* Logo */}
+        {systemSettings?.screensaver_show_logo && fireStationInfo?.logo_path && (
+          <div className="mb-8 animate-fadeIn">
+            <img
+              src={`/api/settings/firestation/logo?t=${Date.now()}`}
+              alt="Feuerwehr Logo"
+              className="h-48 w-auto drop-shadow-2xl max-w-md object-contain"
+              onError={(e) => { 
+                console.error('Logo konnte nicht geladen werden:', fireStationInfo.logo_path);
+                e.target.style.display = 'none'; 
+              }}
+              onLoad={() => console.log('Logo erfolgreich geladen')}
+            />
           </div>
-          <div className="text-4xl md:text-5xl text-white opacity-90 mt-4">
-            {time.toLocaleDateString('de-DE', { 
-              weekday: 'long', 
-              year: 'numeric', 
-              month: 'long', 
-              day: 'numeric' 
-            })}
+        )}
+
+        {/* Fire Station Name */}
+        {fireStationInfo?.name && (
+          <h1 className="text-5xl md:text-7xl font-bold text-white text-center mb-6 drop-shadow-2xl">
+            {fireStationInfo.name}
+          </h1>
+        )}
+
+        {/* Clock */}
+        {systemSettings?.screensaver_show_clock !== false && (
+          <div className="text-center">
+            <div className="text-8xl md:text-9xl font-bold text-white tabular-nums drop-shadow-2xl">
+              {time.toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' })}
+            </div>
+            <div className="text-3xl md:text-4xl text-white opacity-90 mt-4">
+              {time.toLocaleDateString('de-DE', { 
+                weekday: 'long', 
+                year: 'numeric', 
+                month: 'long', 
+                day: 'numeric' 
+              })}
+            </div>
           </div>
-        </div>
-      )}
+        )}
+      </div>
 
       {/* Floating Icons Animation */}
-      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+      <div className="absolute inset-0 overflow-hidden pointer-events-none z-0">
         <div className="text-9xl opacity-10 absolute animate-float-slow" style={{ top: '10%', left: '10%' }}>🚒</div>
         <div className="text-8xl opacity-10 absolute animate-float-medium" style={{ top: '60%', right: '15%' }}>🧯</div>
         <div className="text-7xl opacity-10 absolute animate-float-fast" style={{ bottom: '15%', left: '20%' }}>👨‍🚒</div>
       </div>
 
       {/* Touch/Click hint */}
-      <div className="absolute bottom-12 text-white text-2xl opacity-70 animate-pulse">
+      <div className="pb-8 text-white text-2xl opacity-70 animate-pulse text-center flex-shrink-0">
         Tippen zum Fortfahren
       </div>
     </div>
