@@ -21,8 +21,11 @@ const SessionQRCode = ({ sessionId, large = false }) => {
 
   const loadQRCode = () => {
     setLoading(true);
-    // Use the proxied API endpoint
-    setQrUrl(`/api/sessions/${sessionId}/qr`);
+    // Use the full API URL from environment
+    const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000/api';
+    // Remove /api suffix if already present in base URL
+    const baseUrl = apiBaseUrl.replace(/\/api$/, '');
+    setQrUrl(`${baseUrl}/api/sessions/${sessionId}/qr`);
     setLoading(false);
   };
 

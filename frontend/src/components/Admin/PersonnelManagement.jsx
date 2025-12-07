@@ -63,6 +63,7 @@ const PersonnelManagement = () => {
         is_active: true
       });
       loadPersonnel();
+      triggerKioskRefresh(); // Trigger kiosk refresh after adding/editing personnel
     } catch (error) {
       alert('Fehler: ' + (error.response?.data?.detail || error.message));
     }
