@@ -93,7 +93,6 @@ const Screensaver = ({ onActivity }) => {
         <div className={`${getPriorityStyles(currentNews.priority)} text-white py-6 px-8 shadow-2xl flex-shrink-0`}>
           <div className="max-w-7xl mx-auto">
             <div className="flex items-center space-x-6">
-              <span className="text-3xl font-bold">📢 WICHTIGE MITTEILUNG</span>
               <div className="flex-1">
                 <div className="font-bold text-4xl mb-2">{currentNews.title}</div>
                 {currentNews.content && (
@@ -108,7 +107,7 @@ const Screensaver = ({ onActivity }) => {
       {/* Main Content Area - Centered */}
       <div className="flex-1 flex flex-col items-center justify-center px-8 py-12">
         {/* Logo */}
-        {systemSettings?.screensaver_show_logo && fireStationInfo?.logo_path && (
+        {fireStationInfo?.logo_path && (
           <div className="mb-8 animate-fadeIn">
             <img
               src={`/api/settings/firestation/logo?t=${Date.now()}`}

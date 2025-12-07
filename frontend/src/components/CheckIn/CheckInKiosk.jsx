@@ -19,6 +19,7 @@ const CheckInKiosk = () => {
   const [showEndSessionModal, setShowEndSessionModal] = useState(false);
   const [endSessionNumber, setEndSessionNumber] = useState('');
   const [systemSettings, setSystemSettings] = useState(null);
+  const [fireStationInfo, setFireStationInfo] = useState(null);
   const [isMobileQRView, setIsMobileQRView] = useState(false);
   const [showScreensaver, setShowScreensaver] = useState(false);
   const inactivityTimerRef = useRef(null);
@@ -26,6 +27,7 @@ const CheckInKiosk = () => {
   useEffect(() => {
     // Load system settings
     loadSystemSettings();
+    loadFireStationInfo();
     
     // Setup polling for kiosk refresh (every 5 seconds)
     let lastRefreshTimestamp = null;
@@ -140,6 +142,15 @@ const CheckInKiosk = () => {
         screensaver_enabled: true,
         screensaver_timeout: 300
       });
+    }
+  };
+
+  const loadFireStationInfo = async () => {
+    try {
+      const response = await api.get('/settings/firestation');
+      setFireStationInfo(response.data);
+    } catch (error) {
+      console.error('Fehler beim Laden der Feuerwehr-Informationen:', error);
     }
   };
 
@@ -390,7 +401,17 @@ const CheckInKiosk = () => {
           <div className="max-w-md mx-auto">
             {/* Header */}
             <div className="bg-white rounded-3xl shadow-2xl p-6 mb-4">
-              <h1 className="text-3xl font-bold text-fire-red text-center">Feuerwehr Check-In</h1>
+              {fireStationInfo?.logo_path && (
+                <div className="flex justify-center mb-4">
+                  <img
+                    src={`/api/settings/firestation/logo?t=${Date.now()}`}
+                    alt="Feuerwehr Logo"
+                    className="h-20 w-auto object-contain"
+                    onError={(e) => e.target.style.display = 'none'}
+                  />
+                </div>
+              )}
+              <h1 className="text-3xl font-bold text-fire-red text-center">{fireStationInfo?.name || 'Feuerwehr Check-In'}</h1>
               <p className="text-lg text-gray-600 mt-2 text-center">
                 {selectedSession.event_type}
               </p>
@@ -482,14 +503,24 @@ const CheckInKiosk = () => {
             {/* Header */}
             <div className="bg-white rounded-2xl shadow-xl p-4 mb-3">
               <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
-                <div>
-                  <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-fire-red">Feuerwehr Check-In</h1>
-                  {selectedSession && (
-                    <p className="text-sm sm:text-base lg:text-xl text-gray-600 mt-1">
-                      {selectedSession.event_type} - {new Date(selectedSession.started_at).toLocaleDateString('de-DE')}
-                    </p>
+                <div className="flex items-center space-x-4">
+                  {fireStationInfo?.logo_path && (
+                    <img
+                      src={`/api/settings/firestation/logo?t=${Date.now()}`}
+                      alt="Feuerwehr Logo"
+                      className="h-16 w-auto object-contain"
+                      onError={(e) => e.target.style.display = 'none'}
+                    />
                   )}
-              </div>
+                  <div>
+                    <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-fire-red">{fireStationInfo?.name || 'Feuerwehr Check-In'}</h1>
+                    {selectedSession && (
+                      <p className="text-sm sm:text-base lg:text-xl text-gray-600 mt-1">
+                        {selectedSession.event_type} - {new Date(selectedSession.started_at).toLocaleDateString('de-DE')}
+                      </p>
+                    )}
+                  </div>
+                </div>
               <div className="flex space-x-2 w-full sm:w-auto">
                 {selectedSession && selectedSession.event_type === 'Einsatz' && (
                   <button
