@@ -117,8 +117,11 @@ async def perform_update(
     check_permission(current_user, "settings:update")
     
     try:
-        project_dir = os.path.dirname(os.path.dirname(os.path.dirname(__file__)))
-        parent_dir = os.path.dirname(project_dir)
+        # Use /opt/feuerwehr-app as base directory
+        project_dir = '/opt/feuerwehr-app'
+        if not os.path.exists(project_dir):
+            # Fallback to current directory structure
+            project_dir = os.path.dirname(os.path.dirname(os.path.dirname(__file__)))
         
         output_lines = []
         
@@ -126,7 +129,7 @@ async def perform_update(
         output_lines.append("=== Git Pull ===")
         result = subprocess.run(
             ['git', 'pull', 'origin', 'main'],
-            cwd=parent_dir,
+            cwd=project_dir,
             capture_output=True,
             text=True
         )
@@ -140,18 +143,18 @@ async def perform_update(
         
         # 2. Backend: Install dependencies
         output_lines.append("\n=== Backend Dependencies ===")
-        venv_python = os.path.join(parent_dir, 'backend', 'venv', 'bin', 'python3')
+        venv_python = os.path.join(project_dir, 'backend', 'venv', 'bin', 'python3')
         if os.path.exists(venv_python):
             result = subprocess.run(
                 [venv_python, '-m', 'pip', 'install', '-r', 'requirements.txt'],
-                cwd=os.path.join(parent_dir, 'backend'),
+                cwd=os.path.join(project_dir, 'backend'),
                 capture_output=True,
                 text=True
             )
             output_lines.append(result.stdout[:500])  # Limit output
         
         # 3. Frontend: Install and rebuild
-        frontend_dir = os.path.join(parent_dir, 'frontend')
+        frontend_dir = os.path.join(project_dir, 'frontend')
         
         output_lines.append("\n=== Frontend Dependencies ===")
         result = subprocess.run(
@@ -181,8 +184,8 @@ async def perform_update(
         # 4. Restart services (if systemd)
         output_lines.append("\n=== Service Restart ===")
         try:
-            subprocess.run(['sudo', 'systemctl', 'restart', 'feuerwehr-backend'], check=False)
-            subprocess.run(['sudo', 'systemctl', 'restart', 'feuerwehr-frontend'], check=False)
+            subprocess.run(['sudo', 'systemctl', 'restart', 'fire-station-backend'], check=False)
+            subprocess.run(['sudo', 'systemctl', 'restart', 'fire-station-frontend'], check=False)
             output_lines.append("Services restarted")
         except:
             output_lines.append("Service restart skipped (not on systemd)")
@@ -213,8 +216,8 @@ async def restart_system(
     
     try:
         # Try to restart systemd services
-        subprocess.run(['sudo', 'systemctl', 'restart', 'feuerwehr-backend'], check=False)
-        subprocess.run(['sudo', 'systemctl', 'restart', 'feuerwehr-frontend'], check=False)
+        subprocess.run(['sudo', 'systemctl', 'restart', 'fire-station-backend'], check=False)
+        subprocess.run(['sudo', 'systemctl', 'restart', 'fire-station-frontend'], check=False)
         
         return {"message": "Services werden neu gestartet"}
     except Exception as e:

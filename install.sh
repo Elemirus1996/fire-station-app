@@ -307,6 +307,20 @@ sleep 3
 print_success "Services gestartet"
 echo ""
 
+# 8a. Sudo-Rechte für Service-Restart (für Auto-Update)
+print_header "Konfiguriere sudo-Rechte für Auto-Update..."
+SUDOERS_FILE="/etc/sudoers.d/fire-station-update"
+cat > $SUDOERS_FILE <<EOF
+# Allow root to restart fire station services without password
+root ALL=(ALL) NOPASSWD: /bin/systemctl restart fire-station-backend
+root ALL=(ALL) NOPASSWD: /bin/systemctl restart fire-station-frontend
+root ALL=(ALL) NOPASSWD: /bin/systemctl status fire-station-backend
+root ALL=(ALL) NOPASSWD: /bin/systemctl status fire-station-frontend
+EOF
+chmod 440 $SUDOERS_FILE
+print_success "Sudo-Rechte konfiguriert"
+echo ""
+
 # 9. Raspberry Pi Optimierungen
 print_header "Raspberry Pi Optimierungen..."
 
