@@ -206,7 +206,7 @@ cat > .env <<EOF
 DATABASE_URL=postgresql://firestation:firestation@localhost/firestation
 SECRET_KEY=$(openssl rand -hex 32)
 ALGORITHM=HS256
-ACCESS_TOKEN_EXPIRE_MINUTES=30
+ACCESS_TOKEN_EXPIRE_MINUTES=43200
 CORS_ORIGINS=http://localhost:5173,http://${IP_ADDRESS}:5173
 HOST=0.0.0.0
 PORT=8000
@@ -278,20 +278,20 @@ print_header "Erstelle Systemd Services..."
 
 # Backend Service
 print_info "Erstelle Backend Service..."
-cat > /etc/systemd/system/fire-station-backend.service <<EOF
+cat > /etc/systemd/system/feuerwehr-backend.service <<EOF
 [Unit]
-Description=Fire Station Backend API
+Description=Feuerwehr Anwesenheitssystem Backend
 After=network.target postgresql.service
 Wants=postgresql.service
 
 [Service]
 Type=simple
-User=root
+User=$USER_NAME
 WorkingDirectory=$INSTALL_DIR/backend
-Environment="PATH=$INSTALL_DIR/backend/venv/bin"
-ExecStart=$INSTALL_DIR/backend/venv/bin/uvicorn main:app --host 0.0.0.0 --port 8000
+Environment="PATH=$INSTALL_DIR/backend/venv/bin:/usr/local/bin:/usr/bin:/bin"
+ExecStart=$INSTALL_DIR/backend/venv/bin/python main.py
 Restart=always
-RestartSec=5
+RestartSec=10
 
 [Install]
 WantedBy=multi-user.target
@@ -300,24 +300,48 @@ check_status "Backend Service erstellt"
 
 # Frontend Service
 print_info "Erstelle Frontend Service..."
-cat > /etc/systemd/system/fire-station-frontend.service <<EOF
+cat > /etc/systemd/system/feuerwehr-frontend.service <<EOF
 [Unit]
-Description=Fire Station Frontend
-After=network.target fire-station-backend.service
-Wants=fire-station-backend.service
+Description=Feuerwehr Anwesenheitssystem Frontend
+After=network.target feuerwehr-backend.service
+Wants=feuerwehr-backend.service
 
 [Service]
 Type=simple
-User=root
+User=$USER_NAME
 WorkingDirectory=$INSTALL_DIR/frontend
-ExecStart=/usr/bin/npm run preview -- --host 0.0.0.0 --port 5173
+Environment="PATH=/usr/local/bin:/usr/bin:/bin"
+ExecStart=/usr/bin/npm run dev -- --host 0.0.0.0 --port 5173
 Restart=always
-RestartSec=5
+RestartSec=10
 
 [Install]
 WantedBy=multi-user.target
 EOF
 check_status "Frontend Service erstellt"
+
+# Kiosk Service
+print_info "Erstelle Kiosk Service..."
+cat > /etc/systemd/system/feuerwehr-kiosk.service <<EOF
+[Unit]
+Description=Feuerwehr Kiosk Mode
+After=graphical.target feuerwehr-frontend.service
+Wants=feuerwehr-frontend.service
+
+[Service]
+Type=simple
+User=$USER_NAME
+Environment=DISPLAY=:0
+Environment=XAUTHORITY=/home/$USER_NAME/.Xauthority
+ExecStartPre=/bin/sleep 10
+ExecStart=/usr/bin/chromium-browser --kiosk --noerrdialogs --disable-infobars --no-first-run --check-for-update-interval=31536000 --disable-session-crashed-bubble --disable-translate --disable-features=TranslateUI http://$IP_ADDRESS:5173/kiosk
+Restart=always
+RestartSec=10
+
+[Install]
+WantedBy=graphical.target
+EOF
+check_status "Kiosk Service erstellt"
 
 # Services aktivieren und starten
 print_info "Lade Systemd Konfiguration neu..."
@@ -325,17 +349,18 @@ systemctl daemon-reload
 check_status "Systemd neu geladen"
 
 print_info "Aktiviere Services..."
-systemctl enable fire-station-backend
-systemctl enable fire-station-frontend
+systemctl enable feuerwehr-backend
+systemctl enable feuerwehr-frontend
+systemctl enable feuerwehr-kiosk
 check_status "Services aktiviert"
 
 print_info "Starte Backend..."
-systemctl start fire-station-backend
+systemctl start feuerwehr-backend
 sleep 3
 check_status "Backend gestartet"
 
 print_info "Starte Frontend..."
-systemctl start fire-station-frontend
+systemctl start feuerwehr-frontend
 sleep 3
 check_status "Frontend gestartet"
 echo ""
@@ -343,9 +368,9 @@ echo ""
 # 10. Status prüfen
 print_header "Prüfe Service-Status..."
 echo ""
-systemctl status fire-station-backend --no-pager -l
+systemctl status feuerwehr-backend --no-pager -l
 echo ""
-systemctl status fire-station-frontend --no-pager -l
+systemctl status feuerwehr-frontend --no-pager -l
 echo ""
 
 # 11. Raspberry Pi Optimierungen
@@ -377,19 +402,23 @@ print_success "API Dokumentation: http://${IP_ADDRESS}:${BACKEND_PORT}/docs"
 echo ""
 print_info "Standard Admin-Login:"
 print_info "  Username: admin"
-print_info "  Password: admin123"
+print_info "  Password: admin"
 echo ""
 print_info "Services verwalten:"
-print_info "  sudo systemctl status fire-station-backend"
-print_info "  sudo systemctl status fire-station-frontend"
-print_info "  sudo systemctl restart fire-station-backend"
-print_info "  sudo systemctl restart fire-station-frontend"
+print_info "  sudo systemctl status feuerwehr-backend"
+print_info "  sudo systemctl status feuerwehr-frontend"
+print_info "  sudo systemctl status feuerwehr-kiosk"
+print_info "  sudo systemctl restart feuerwehr-backend"
+print_info "  sudo systemctl restart feuerwehr-frontend"
 echo ""
 print_info "Logs ansehen:"
-print_info "  sudo journalctl -u fire-station-backend -f"
-print_info "  sudo journalctl -u fire-station-frontend -f"
+print_info "  sudo journalctl -u feuerwehr-backend -f"
+print_info "  sudo journalctl -u feuerwehr-frontend -f"
+print_info "  sudo journalctl -u feuerwehr-kiosk -f"
 echo ""
 print_info "Installations-Log gespeichert in: $LOG_FILE"
+echo ""
+print_info "🔄 Neustart empfohlen für Kiosk-Autostart: sudo reboot"
 echo ""
 print_success "Viel Erfolg mit dem Feuerwehr Anwesenheitssystem! 🚒"
 echo "=========================================================="
