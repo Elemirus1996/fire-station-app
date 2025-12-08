@@ -2,16 +2,20 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker, Session
 from .models import Base
 import os
+from dotenv import load_dotenv
 
-# Ensure absolute path for SQLite database
+# Load .env file
+load_dotenv()
+
+# Get database URL from environment
 if "DATABASE_URL" in os.environ:
     DATABASE_URL = os.environ["DATABASE_URL"]
 else:
-    # Default: Use absolute path in backend directory
+    # Default: Use absolute path for SQLite database
     backend_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
     db_path = os.path.join(backend_dir, "fire_station.db")
     DATABASE_URL = f"sqlite:///{db_path}"
-    print(f"Using database at: {db_path}")
+    print(f"⚠️  WARNING: Using SQLite database at: {db_path}")
 
 engine = create_engine(
     DATABASE_URL,
