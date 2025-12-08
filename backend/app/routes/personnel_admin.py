@@ -5,7 +5,7 @@ from typing import Optional, List
 from datetime import datetime
 from ..database import get_db
 from ..models import PersonnelAdmin, Personnel, AuditLog, AdminUser, DIENSTGRADE
-from ..utils.auth import verify_password, get_password_hash, create_access_token
+from ..utils.auth import verify_password, get_password_hash, create_access_token, get_current_user
 from ..utils.permissions import check_permission
 
 router = APIRouter(prefix="/api/personnel-admin", tags=["personnel-admin"])
