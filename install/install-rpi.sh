@@ -38,10 +38,16 @@ if [ "$EUID" -ne 0 ]; then
     exit 1
 fi
 
+# Ermittle den echten Benutzer (nicht root)
+if [ -n "$SUDO_USER" ]; then
+    USER="$SUDO_USER"
+else
+    USER="pi"
+fi
+
 # Konfiguration
 INSTALL_DIR="/opt/feuerwehr-app"
 REPO_URL="https://github.com/Elemirus1996/fire-station-app.git"
-USER="pi"
 IP_ADDRESS=$(hostname -I | awk '{print $1}')
 LOG_FILE="/tmp/feuerwehr-install-$(date +%Y%m%d-%H%M%S).log"
 
@@ -246,7 +252,7 @@ print_header "Systemd Services einrichten"
 
 # Backend Service
 print_info "Erstelle Backend Service..."
-cat > /etc/systemd/system/feuerwehr-backend.service << 'EOSRV'
+cat > /etc/systemd/system/feuerwehr-backend.service << EOSRV
 [Unit]
 Description=Feuerwehr Anwesenheitssystem Backend
 After=network.target postgresql.service
@@ -254,7 +260,7 @@ Wants=postgresql.service
 
 [Service]
 Type=simple
-User=pi
+User=$USER
 WorkingDirectory=/opt/feuerwehr-app/backend
 Environment="PATH=/opt/feuerwehr-app/backend/venv/bin:/usr/local/bin:/usr/bin:/bin"
 ExecStart=/opt/feuerwehr-app/backend/venv/bin/python main.py
@@ -269,7 +275,7 @@ EOSRV
 
 # Frontend Service
 print_info "Erstelle Frontend Service..."
-cat > /etc/systemd/system/feuerwehr-frontend.service << 'EOSRV'
+cat > /etc/systemd/system/feuerwehr-frontend.service << EOSRV
 [Unit]
 Description=Feuerwehr Anwesenheitssystem Frontend
 After=network.target feuerwehr-backend.service
@@ -277,7 +283,7 @@ Wants=feuerwehr-backend.service
 
 [Service]
 Type=simple
-User=pi
+User=$USER
 WorkingDirectory=/opt/feuerwehr-app/frontend
 Environment="PATH=/usr/local/bin:/usr/bin:/bin"
 ExecStart=/usr/bin/npm run dev -- --host 0.0.0.0 --port 5173
@@ -300,9 +306,9 @@ Wants=feuerwehr-frontend.service
 
 [Service]
 Type=simple
-User=pi
+User=$USER
 Environment=DISPLAY=:0
-Environment=XAUTHORITY=/home/pi/.Xauthority
+Environment=XAUTHORITY=/home/$USER/.Xauthority
 ExecStartPre=/bin/sleep 15
 ExecStart=/usr/bin/chromium-browser \\
     --kiosk \\
@@ -358,7 +364,7 @@ fi
 # 10. BERECHTIGUNGEN SETZEN
 ################################################################################
 print_header "Berechtigungen anpassen"
-chown -R pi:pi "$INSTALL_DIR"
+chown -R $USER:$USER "$INSTALL_DIR"
 print_success "Berechtigungen gesetzt"
 
 ################################################################################
@@ -375,14 +381,15 @@ else
 fi
 
 print_info "Bildschirmschoner deaktivieren..."
-if [ ! -f /home/pi/.xsessionrc ]; then
-    cat > /home/pi/.xsessionrc << 'EOXS'
+USER_HOME=$(eval echo ~$USER)
+if [ ! -f $USER_HOME/.xsessionrc ]; then
+    cat > $USER_HOME/.xsessionrc << 'EOXS'
 xset s off
 xset -dpms
 xset s noblank
 unclutter -idle 0.1 -root &
 EOXS
-    chown pi:pi /home/pi/.xsessionrc
+    chown $USER:$USER $USER_HOME/.xsessionrc
     print_success "Bildschirmschoner deaktiviert"
 fi
 
