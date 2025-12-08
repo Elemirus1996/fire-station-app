@@ -178,7 +178,7 @@ pip install -r requirements.txt || error_exit "Python-Pakete Installation fehlge
 
 print_info "Erstelle .env Konfiguration..."
 cat > .env << EOF
-DATABASE_URL=postgresql://firestation:firestation@localhost/firestation
+DATABASE_URL=postgresql+psycopg://firestation:firestation@localhost/firestation
 SECRET_KEY=$(openssl rand -hex 32)
 ALGORITHM=HS256
 ACCESS_TOKEN_EXPIRE_MINUTES=43200
