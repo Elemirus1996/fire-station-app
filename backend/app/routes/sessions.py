@@ -1,13 +1,15 @@
 from fastapi import APIRouter, Depends, HTTPException, Header
+from fastapi.responses import Response
 from sqlalchemy.orm import Session
 from pydantic import BaseModel
 from typing import List, Optional
 from datetime import datetime
 from ..database import get_db
-from ..models import Session as SessionModel, Attendance, Personnel, AdminUser, MIN_RANG_EINSATZ_BEENDEN, DIENSTGRADE
+from ..models import Session as SessionModel, Attendance, Personnel, AdminUser, MIN_RANG_EINSATZ_BEENDEN, DIENSTGRADE, SystemSettings
 from ..utils.auth import get_current_user, decode_token
 from ..utils.permissions import check_permission
 from ..services.session_manager import SessionManager
+from ..services.qr_generator import QRGenerator
 
 router = APIRouter(prefix="/api/sessions", tags=["sessions"])
 
@@ -266,3 +268,30 @@ async def get_active_sessions(db: Session = Depends(get_db)):
         })
     
     return result
+
+@router.get("/{session_id}/qr")
+async def get_session_qr(
+    session_id: int,
+    db: Session = Depends(get_db)
+):
+    """Generate QR code for session check-in"""
+    session = db.query(SessionModel).filter(SessionModel.id == session_id).first()
+    if not session:
+        raise HTTPException(status_code=404, detail="Session nicht gefunden")
+    
+    if not session.is_active:
+        raise HTTPException(status_code=400, detail="Session ist nicht aktiv")
+    
+    # Load kiosk base URL from system settings
+    sys_settings = db.query(SystemSettings).first()
+    base_url = "http://localhost:5173"  # Default fallback
+    if sys_settings and sys_settings.kiosk_base_url:
+        base_url = sys_settings.kiosk_base_url
+    
+    qr_bytes = QRGenerator.generate_qr_code(session_id, base_url)
+    
+    return Response(
+        content=qr_bytes,
+        media_type="image/png",
+        headers={"Content-Disposition": f"inline; filename=session_{session_id}_qr.png"}
+    )

@@ -84,10 +84,17 @@ const AdminLogin = () => {
           </button>
         </form>
 
-        <div className="mt-6 text-center">
+        <div className="mt-6 text-center space-y-3">
+          <button
+            onClick={() => navigate('/admin/personnel-login')}
+            className="w-full bg-gray-100 text-gray-700 py-3 px-4 rounded-xl font-semibold hover:bg-gray-200 transition-all"
+          >
+            Personal-Login (Stammrollennummer)
+          </button>
+          
           <a
             href="/kiosk"
-            className="text-fire-red hover:underline text-sm"
+            className="text-fire-red hover:underline text-sm inline-block"
           >
             ← Zurück zum Check-In
           </a>

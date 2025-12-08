@@ -7,7 +7,7 @@ from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from sqlalchemy.orm import Session
 import os
 from ..database import get_db
-from ..models import AdminUser
+from ..models import AdminUser, PersonnelAdmin, Personnel
 
 # Load from environment variables with defaults
 SECRET_KEY = os.getenv("SECRET_KEY", "feuerwehr-secret-key-2025-change-in-production")
@@ -44,6 +44,7 @@ async def get_current_user(
     credentials: HTTPAuthorizationCredentials = Depends(security),
     db: Session = Depends(get_db)
 ):
+    """Get current user - supports both AdminUser and PersonnelAdmin"""
     token = credentials.credentials
     payload = decode_token(token)
     
@@ -53,18 +54,64 @@ async def get_current_user(
             detail="Ungültiger Token"
         )
     
+    # Check token type
+    token_type = payload.get("type", "admin")
     username: str = payload.get("sub")
+    
     if username is None:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Ungültiger Token"
         )
     
-    user = db.query(AdminUser).filter(AdminUser.username == username).first()
-    if user is None:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Benutzer nicht gefunden"
-        )
+    if token_type == "personnel_admin":
+        # Personnel admin login
+        personnel_id = payload.get("personnel_id")
+        if not personnel_id:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Ungültiger Token"
+            )
+        
+        personnel = db.query(Personnel).filter(Personnel.id == personnel_id).first()
+        if not personnel:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Personal nicht gefunden"
+            )
+        
+        admin = db.query(PersonnelAdmin).filter(
+            PersonnelAdmin.personnel_id == personnel_id,
+            PersonnelAdmin.is_active == True
+        ).first()
+        
+        if not admin:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Kein Admin-Zugriff"
+            )
+        
+        # Return AdminUser-like object for compatibility
+        class PersonnelAdminUser:
+            def __init__(self, personnel, admin):
+                self.id = admin.id
+                self.username = personnel.stammrollennummer
+                self.role = admin.role
+                self.is_personnel = True
+                self.personnel_id = personnel.id
+                self.personnel = personnel
+        
+        return PersonnelAdminUser(personnel, admin)
     
-    return user
+    else:
+        # Standard admin login
+        user = db.query(AdminUser).filter(AdminUser.username == username).first()
+        if user is None:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Benutzer nicht gefunden"
+            )
+        
+        # Add flag for compatibility
+        user.is_personnel = False
+        return user

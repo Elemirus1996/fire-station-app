@@ -2,6 +2,7 @@ import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import CheckInKiosk from './components/CheckIn/CheckInKiosk';
 import AdminLogin from './components/Admin/AdminLogin';
+import PersonnelAdminLogin from './components/Admin/PersonnelAdminLogin';
 import AdminDashboard from './components/Admin/AdminDashboard';
 import PersonnelManagement from './components/Admin/PersonnelManagement';
 import SessionManagement from './components/Admin/SessionManagement';
@@ -15,6 +16,8 @@ import NewsManager from './components/Admin/NewsManager';
 import LiveDashboard from './components/Admin/LiveDashboard';
 import Statistics from './components/Admin/Statistics';
 import ChangePassword from './components/Admin/ChangePassword';
+import AuditLog from './components/Admin/AuditLog';
+import PersonnelAdminManagement from './components/Admin/PersonnelAdminManagement';
 import ScreensaverDebugTest from './components/CheckIn/ScreensaverDebugTest';
 
 function App() {
@@ -27,15 +30,18 @@ function App() {
         <Route path="/test-screensaver" element={<ScreensaverDebugTest />} />
         
         <Route path="/admin/login" element={<AdminLogin />} />
+        <Route path="/admin/personnel-login" element={<PersonnelAdminLogin />} />
         <Route path="/admin" element={<AdminDashboard />}>
           <Route index element={<Navigate to="/admin/sessions" replace />} />
           <Route path="sessions" element={<SessionManagement />} />
           <Route path="sessions/:sessionId" element={<SessionDetails />} />
           <Route path="personnel" element={<PersonnelManagement />} />
+          <Route path="personnel-admins" element={<PersonnelAdminManagement />} />
           <Route path="announcements" element={<AnnouncementManager />} />
           <Route path="news" element={<NewsManager />} />
           <Route path="dashboard" element={<LiveDashboard />} />
           <Route path="statistics" element={<Statistics />} />
+          <Route path="audit" element={<AuditLog />} />
           <Route path="change-password" element={<ChangePassword />} />
           <Route path="settings/firestation" element={<FireStationSettings />} />
           <Route path="settings/system" element={<SystemSettings />} />

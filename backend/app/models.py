@@ -206,3 +206,61 @@ class AuditLog(Base):
     changes = Column(JSON)
     ip_address = Column(String(50))
     timestamp = Column(DateTime, default=datetime.utcnow, index=True)
+
+
+class CalendarEvent(Base):
+    __tablename__ = "calendar_events"
+    
+    id = Column(Integer, primary_key=True, index=True)
+    title = Column(String(200), nullable=False)
+    description = Column(Text)
+    event_type = Column(String(50), nullable=False)  # training, meeting, event, duty, other
+    start_time = Column(DateTime, nullable=False, index=True)
+    end_time = Column(DateTime, nullable=False)
+    location = Column(String(200))
+    all_day = Column(Boolean, default=False)
+    recurrence = Column(String(20))  # none, daily, weekly, monthly
+    max_participants = Column(Integer)
+    registration_required = Column(Boolean, default=False)
+    created_by = Column(Integer, ForeignKey("admin_users.id"))
+    created_at = Column(DateTime, default=datetime.utcnow)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+
+class EventParticipant(Base):
+    __tablename__ = "event_participants"
+    
+    id = Column(Integer, primary_key=True, index=True)
+    event_id = Column(Integer, ForeignKey("calendar_events.id"), nullable=False)
+    personnel_id = Column(Integer, ForeignKey("personnel.id"), nullable=False)
+    status = Column(String(20), default="registered")  # registered, confirmed, cancelled
+    registered_at = Column(DateTime, default=datetime.utcnow)
+    notes = Column(Text)
+
+
+class DutySchedule(Base):
+    __tablename__ = "duty_schedules"
+    
+    id = Column(Integer, primary_key=True, index=True)
+    title = Column(String(200), nullable=False)
+    duty_type = Column(String(50), nullable=False)  # standby, on-call, shift
+    start_time = Column(DateTime, nullable=False, index=True)
+    end_time = Column(DateTime, nullable=False)
+    personnel_id = Column(Integer, ForeignKey("personnel.id"), nullable=False)
+    notes = Column(Text)
+    created_by = Column(Integer, ForeignKey("admin_users.id"))
+    created_at = Column(DateTime, default=datetime.utcnow)
+
+
+class PersonnelAdmin(Base):
+    __tablename__ = "personnel_admins"
+    
+    id = Column(Integer, primary_key=True, index=True)
+    personnel_id = Column(Integer, ForeignKey("personnel.id"), unique=True, nullable=False)
+    hashed_password = Column(String(255), nullable=False)
+    role = Column(String(50), default="admin")  # admin, moderator
+    is_active = Column(Boolean, default=True)
+    last_login = Column(DateTime)
+    created_at = Column(DateTime, default=datetime.utcnow)
+    created_by = Column(Integer, ForeignKey("admin_users.id"))
+

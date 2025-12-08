@@ -108,7 +108,17 @@ const AdminDashboard = () => {
                     : 'hover:bg-gray-100'
                 }`}
               >
-                👥 Personal
+                👤 Personal
+              </Link>
+              <Link
+                to="/admin/personnel-admins"
+                className={`block px-4 py-2 rounded-lg transition-all ${
+                  isActive('/admin/personnel-admins')
+                    ? 'bg-fire-red text-white'
+                    : 'hover:bg-gray-100'
+                }`}
+              >
+                🔑 Personal-Admins
               </Link>
               <Link
                 to="/admin/announcements"
@@ -149,6 +159,16 @@ const AdminDashboard = () => {
                 }`}
               >
                 📈 Statistiken
+              </Link>
+              <Link
+                to="/admin/audit"
+                className={`block px-4 py-2 rounded-lg transition-all ${
+                  isActive('/admin/audit')
+                    ? 'bg-fire-red text-white'
+                    : 'hover:bg-gray-100'
+                }`}
+              >
+                📋 Audit-Log
               </Link>
               
               <div className="border-t pt-2 mt-2">

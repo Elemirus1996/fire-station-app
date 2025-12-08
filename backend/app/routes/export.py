@@ -1,60 +1,13 @@
 from fastapi import APIRouter, Depends, HTTPException
-from fastapi.responses import StreamingResponse, Response
+from fastapi.responses import Response
 from sqlalchemy.orm import Session
-from pydantic import BaseModel
-from io import BytesIO
 from ..database import get_db
-from ..models import Session as SessionModel, AdminUser, SystemSettings
+from ..models import AdminUser
 from ..utils.auth import get_current_user
 from ..utils.permissions import check_permission
-from ..services.qr_generator import QRGenerator
 from ..services.pdf_generator import PDFGenerator
 
-router = APIRouter(prefix="/api", tags=["export"])
-
-# QR Code routes
-@router.get("/sessions/{session_id}/qr")
-async def get_session_qr(
-    session_id: int,
-    db: Session = Depends(get_db)
-):
-    """Generate QR code for session check-in"""
-    session = db.query(SessionModel).filter(SessionModel.id == session_id).first()
-    if not session:
-        raise HTTPException(status_code=404, detail="Session nicht gefunden")
-    
-    if not session.is_active:
-        raise HTTPException(status_code=400, detail="Session ist nicht aktiv")
-    
-    # Load kiosk base URL from system settings
-    sys_settings = db.query(SystemSettings).first()
-    base_url = "http://localhost:5173"  # Default fallback
-    if sys_settings and sys_settings.kiosk_base_url:
-        base_url = sys_settings.kiosk_base_url
-    
-    qr_bytes = QRGenerator.generate_qr_code(session_id, base_url)
-    
-    return Response(
-        content=qr_bytes,
-        media_type="image/png",
-        headers={"Content-Disposition": f"inline; filename=session_{session_id}_qr.png"}
-    )
-
-class TokenValidateRequest(BaseModel):
-    token: str
-
-@router.post("/checkin/validate-token")
-async def validate_checkin_token(request: TokenValidateRequest):
-    """Validate QR code token"""
-    payload = QRGenerator.validate_session_token(request.token)
-    
-    if not payload:
-        raise HTTPException(status_code=400, detail="Ungültiger oder abgelaufener Token")
-    
-    return {
-        "valid": True,
-        "session_id": payload.get("session_id")
-    }
+router = APIRouter(prefix="/api/export", tags=["export"])
 
 # PDF Export routes
 @router.get("/sessions/{session_id}/pdf")

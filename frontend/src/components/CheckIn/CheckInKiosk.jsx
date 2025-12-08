@@ -160,7 +160,7 @@ const CheckInKiosk = () => {
 
   const validateQRToken = async () => {
     try {
-      const response = await api.post('/checkin/validate-token', { token: qrToken });
+      const response = await api.post('/attendance/validate-token', { token: qrToken });
       if (response.data.valid) {
         // Load all active sessions and find the one matching this session_id
         const sessionsResponse = await api.get('/sessions/active/current');
@@ -169,17 +169,22 @@ const CheckInKiosk = () => {
         const matchingSession = activeSessions.find(s => s.id === response.data.session_id);
         
         if (matchingSession) {
+          console.log('✅ QR-Code validiert, wechsle zur mobilen Ansicht', matchingSession);
           setSelectedSession(matchingSession);
           setShowSessionSelect(false);
+          setIsMobileQRView(true); // Sicherstellen, dass mobile Ansicht aktiviert ist
           setMessage({ text: 'QR-Code erfolgreich gescannt', type: 'success' });
         } else {
+          console.error('❌ Session nicht gefunden:', response.data.session_id);
           setMessage({ text: 'Session nicht gefunden oder nicht mehr aktiv', type: 'error' });
+          setIsMobileQRView(false);
           loadActiveSessions();
         }
       }
     } catch (error) {
       console.error('QR-Code Validierungsfehler:', error);
-      setMessage({ text: 'Ungültiger QR-Code', type: 'error' });
+      setMessage({ text: 'Ungültiger QR-Code: ' + (error.response?.data?.detail || error.message), type: 'error' });
+      setIsMobileQRView(false);
       loadActiveSessions();
     }
   };
