@@ -1,96 +1,89 @@
 #!/bin/bash
 
-#############################################
-# Feuerwehr Anwesenheitssystem - Raspberry Pi 5 Installation
-# DEBUG VERSION - Zeigt alle Fehler an
-#############################################
+################################################################################
+# Feuerwehr Anwesenheitssystem - Raspberry Pi Installer
+# 
+# Automatische Installation für Raspberry Pi 4/5 mit Raspberry Pi OS
+# Erstellt: Dezember 2025
+################################################################################
 
-# KEIN set -e - Script läuft weiter bei Fehlern
-# set -e
+set -e
 
 # Farben
 RED='\033[0;31m'
 GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
 BLUE='\033[0;34m'
+CYAN='\033[0;36m'
 NC='\033[0m'
 
-print_success() { echo -e "${GREEN}✓ $1${NC}"; }
-print_error() { echo -e "${RED}✗ $1${NC}"; }
-print_info() { echo -e "${YELLOW}ℹ $1${NC}"; }
-print_header() { echo -e "${BLUE}▶ $1${NC}"; }
+# Funktionen
+print_header() { echo -e "\n${BLUE}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"; echo -e "${CYAN}▶ $1${NC}"; echo -e "${BLUE}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}\n"; }
+print_success() { echo -e "${GREEN}✓${NC} $1"; }
+print_error() { echo -e "${RED}✗${NC} $1"; }
+print_info() { echo -e "${YELLOW}ℹ${NC} $1"; }
 
-# Logging
-LOG_FILE="/tmp/fire-station-install-$(date +%Y%m%d-%H%M%S).log"
-exec > >(tee -a "$LOG_FILE")
-exec 2>&1
+# Fehlerbehandlung
+error_exit() {
+    print_error "$1"
+    echo ""
+    print_info "Installation fehlgeschlagen. Log: $LOG_FILE"
+    exit 1
+}
 
 # Root-Check
 if [ "$EUID" -ne 0 ]; then 
-    print_error "Bitte als root ausführen: sudo bash install-rpi5-debug.sh"
+    print_error "Dieses Script muss als root ausgeführt werden"
+    echo "Verwenden Sie: sudo bash install-rpi.sh"
     exit 1
 fi
-
-clear
-echo "=========================================================="
-echo "🚒 Feuerwehr Anwesenheitssystem - Raspberry Pi 5 Setup"
-echo "=========================================================="
-echo ""
-echo "DEBUG VERSION - Zeigt alle Schritte und Fehler an"
-echo "Log-Datei: $LOG_FILE"
-echo ""
 
 # Konfiguration
 INSTALL_DIR="/opt/feuerwehr-app"
-USER_NAME="pi"
+REPO_URL="https://github.com/Elemirus1996/fire-station-app.git"
+USER="pi"
 IP_ADDRESS=$(hostname -I | awk '{print $1}')
-FRONTEND_PORT=5173
-BACKEND_PORT=8000
+LOG_FILE="/tmp/feuerwehr-install-$(date +%Y%m%d-%H%M%S).log"
 
-print_info "IP-Adresse: $IP_ADDRESS"
-print_info "Installationsverzeichnis: $INSTALL_DIR"
-print_info "Frontend-Port: $FRONTEND_PORT"
-print_info "Backend-Port: $BACKEND_PORT"
+# Logging einrichten
+exec > >(tee -a "$LOG_FILE")
+exec 2>&1
+
+# Banner
+clear
 echo ""
-
-read -p "Möchten Sie fortfahren? (j/n): " -n 1 -r
+echo -e "${RED}╔══════════════════════════════════════════════════════╗${NC}"
+echo -e "${RED}║                                                      ║${NC}"
+echo -e "${RED}║       🚒  FEUERWEHR ANWESENHEITSSYSTEM  🚒          ║${NC}"
+echo -e "${RED}║                                                      ║${NC}"
+echo -e "${RED}║            Raspberry Pi Installation                ║${NC}"
+echo -e "${RED}║                                                      ║${NC}"
+echo -e "${RED}╚══════════════════════════════════════════════════════╝${NC}"
+echo ""
+print_info "IP-Adresse: $IP_ADDRESS"
+print_info "Installation: $INSTALL_DIR"
+print_info "Log-Datei: $LOG_FILE"
+echo ""
+read -p "Installation starten? (j/n): " -n 1 -r
 echo ""
 if [[ ! $REPLY =~ ^[Jj]$ ]]; then
-    print_error "Installation abgebrochen"
-    exit 1
+    print_info "Installation abgebrochen"
+    exit 0
 fi
 
-# Funktion zum Prüfen des letzten Befehls
-check_status() {
-    if [ $? -eq 0 ]; then
-        print_success "$1"
-        return 0
-    else
-        print_error "$1 - FEHLER!"
-        print_error "Siehe Details oben oder in: $LOG_FILE"
-        read -p "Trotzdem fortfahren? (j/n): " -n 1 -r
-        echo ""
-        if [[ ! $REPLY =~ ^[Jj]$ ]]; then
-            exit 1
-        fi
-        return 1
-    fi
-}
+################################################################################
+# 1. SYSTEM AKTUALISIEREN
+################################################################################
+print_header "System-Update"
+print_info "System-Pakete aktualisieren..."
+apt-get update || error_exit "apt-get update fehlgeschlagen"
+apt-get upgrade -y || error_exit "apt-get upgrade fehlgeschlagen"
+print_success "System aktualisiert"
 
-# 1. System aktualisieren
-print_header "System wird aktualisiert..."
-print_info "apt-get update..."
-apt-get update
-check_status "apt-get update"
-
-print_info "apt-get upgrade..."
-apt-get upgrade -y
-check_status "apt-get upgrade"
-echo ""
-
-# 2. Dependencies installieren - EINZELN
-print_header "Installiere System-Pakete (einzeln für besseres Debugging)..."
-
+################################################################################
+# 2. SYSTEM-PAKETE INSTALLIEREN
+################################################################################
+print_header "System-Pakete installieren"
 PACKAGES=(
     "python3"
     "python3-pip"
@@ -100,109 +93,91 @@ PACKAGES=(
     "git"
     "curl"
     "wget"
-    "sqlite3"
+    "postgresql"
+    "postgresql-contrib"
+    "libpq-dev"
+    "chromium-browser"
+    "unclutter"
+    "x11-xserver-utils"
 )
 
-for package in "${PACKAGES[@]}"; do
-    print_info "Installiere $package..."
-    apt-get install -y "$package"
-    check_status "$package installiert"
+for pkg in "${PACKAGES[@]}"; do
+    print_info "Installiere $pkg..."
+    apt-get install -y "$pkg" || print_error "Fehler bei $pkg (wird übersprungen)"
 done
-echo ""
+print_success "System-Pakete installiert"
 
-# 3. Node.js installieren
-print_header "Node.js Installation..."
-print_info "Prüfe aktuelle Node.js Version..."
-if command -v node &> /dev/null; then
-    NODE_VERSION=$(node -v)
-    print_info "Aktuelle Version: $NODE_VERSION"
-else
-    print_info "Node.js nicht installiert"
-fi
+################################################################################
+# 3. NODE.JS INSTALLIEREN
+################################################################################
+print_header "Node.js installieren"
+print_info "Füge NodeSource Repository hinzu..."
+curl -fsSL https://deb.nodesource.com/setup_20.x | bash - || error_exit "NodeSource Setup fehlgeschlagen"
+print_info "Installiere Node.js..."
+apt-get install -y nodejs || error_exit "Node.js Installation fehlgeschlagen"
+print_success "Node.js $(node -v) installiert"
+print_success "npm $(npm -v) installiert"
 
-print_info "Installiere Node.js 20 LTS..."
-curl -fsSL https://deb.nodesource.com/setup_20.x | bash -
-check_status "NodeSource Repository hinzugefügt"
-
-apt-get install -y nodejs
-check_status "Node.js installiert"
-
-print_success "Node.js Version: $(node -v)"
-print_success "npm Version: $(npm -v)"
-echo ""
-
-# 4. PostgreSQL installieren
-print_header "PostgreSQL Installation..."
-apt-get install -y postgresql postgresql-contrib libpq-dev
-check_status "PostgreSQL installiert"
-
+################################################################################
+# 4. POSTGRESQL EINRICHTEN
+################################################################################
+print_header "PostgreSQL Datenbank einrichten"
+print_info "Starte PostgreSQL..."
 systemctl start postgresql
-check_status "PostgreSQL gestartet"
-
 systemctl enable postgresql
-check_status "PostgreSQL Autostart aktiviert"
-echo ""
 
-# 5. Datenbank erstellen
-print_header "Datenbank-Setup..."
 print_info "Erstelle Datenbank und Benutzer..."
-
-sudo -u postgres psql <<EOF
--- Lösche existierende Datenbank falls vorhanden
+sudo -u postgres psql << 'EOSQL' || error_exit "Datenbank-Setup fehlgeschlagen"
+-- Alte Datenbank löschen falls vorhanden
 DROP DATABASE IF EXISTS firestation;
 DROP USER IF EXISTS firestation;
 
--- Erstelle neuen Benutzer
+-- Neuen User erstellen
 CREATE USER firestation WITH PASSWORD 'firestation';
 
--- Erstelle Datenbank
+-- Datenbank erstellen
 CREATE DATABASE firestation OWNER firestation;
 
--- Gebe Rechte
+-- Rechte vergeben
 GRANT ALL PRIVILEGES ON DATABASE firestation TO firestation;
-
--- Verbinde zur Datenbank und gebe Schema-Rechte
 \c firestation
 GRANT ALL ON SCHEMA public TO firestation;
-EOF
+EOSQL
 
-check_status "Datenbank erstellt"
-echo ""
+print_success "PostgreSQL eingerichtet"
 
-# 6. Repository klonen
-print_header "Lade Anwendung herunter..."
+################################################################################
+# 5. ANWENDUNG INSTALLIEREN
+################################################################################
+print_header "Anwendung herunterladen"
+
+# Altes Verzeichnis löschen falls vorhanden
 if [ -d "$INSTALL_DIR" ]; then
-    print_info "Verzeichnis existiert bereits, lösche und klone neu..."
-    rm -rf $INSTALL_DIR
+    print_info "Lösche altes Verzeichnis..."
+    rm -rf "$INSTALL_DIR"
 fi
 
-mkdir -p $INSTALL_DIR
-cd $INSTALL_DIR
+print_info "Klone Repository..."
+git clone "$REPO_URL" "$INSTALL_DIR" || error_exit "Git Clone fehlgeschlagen"
+cd "$INSTALL_DIR"
+print_success "Repository geklont"
 
-print_info "Clone von GitHub..."
-git clone https://github.com/Elemirus1996/fire-station-app.git .
-check_status "Repository geklont"
-echo ""
-
-# 7. Backend Setup
-print_header "Backend-Setup..."
-cd $INSTALL_DIR/backend
+################################################################################
+# 6. BACKEND EINRICHTEN
+################################################################################
+print_header "Backend einrichten"
+cd "$INSTALL_DIR/backend"
 
 print_info "Erstelle Python Virtual Environment..."
-python3 -m venv venv
-check_status "Virtual Environment erstellt"
+python3 -m venv venv || error_exit "Virtual Environment erstellen fehlgeschlagen"
 
-print_info "Aktiviere Virtual Environment..."
+print_info "Aktiviere Virtual Environment und installiere Dependencies..."
 source venv/bin/activate
-check_status "Virtual Environment aktiviert"
-
-print_info "Installiere Python-Pakete..."
 pip install --upgrade pip
-pip install -r requirements.txt
-check_status "Python-Pakete installiert"
+pip install -r requirements.txt || error_exit "Python-Pakete Installation fehlgeschlagen"
 
-print_info "Erstelle .env Datei..."
-cat > .env <<EOF
+print_info "Erstelle .env Konfiguration..."
+cat > .env << EOF
 DATABASE_URL=postgresql://firestation:firestation@localhost/firestation
 SECRET_KEY=$(openssl rand -hex 32)
 ALGORITHM=HS256
@@ -211,29 +186,28 @@ CORS_ORIGINS=http://localhost:5173,http://${IP_ADDRESS}:5173
 HOST=0.0.0.0
 PORT=8000
 EOF
-check_status ".env Datei erstellt"
 
 print_info "Initialisiere Datenbank..."
-python -c "from app.database import init_db; init_db()"
-check_status "Datenbank initialisiert"
-
-print_info "Erstelle Admin-User..."
-python << 'EOFPYTHON'
+python3 << 'EOPY' || error_exit "Datenbank-Initialisierung fehlgeschlagen"
 import sys
 sys.path.insert(0, '/opt/feuerwehr-app/backend')
+from app.database import init_db
+init_db()
+print("Datenbank-Tabellen erstellt")
+EOPY
 
+print_info "Erstelle Admin-User..."
+python3 << 'EOPY' || error_exit "Admin-Erstellung fehlgeschlagen"
+import sys
+sys.path.insert(0, '/opt/feuerwehr-app/backend')
 from app.database import SessionLocal
 from app.models import AdminUser
 from app.utils.auth import get_password_hash
 
 db = SessionLocal()
-
 try:
-    # Prüfe ob Admin existiert
     admin = db.query(AdminUser).filter(AdminUser.username == "admin").first()
-    
     if not admin:
-        print("  Erstelle Admin-User...")
         admin = AdminUser(
             username="admin",
             hashed_password=get_password_hash("admin"),
@@ -241,44 +215,38 @@ try:
         )
         db.add(admin)
         db.commit()
-        print("  ✓ Admin-User erstellt (Username: admin, Password: admin)")
+        print("Admin-User erstellt")
     else:
-        print("  ✓ Admin-User existiert bereits")
-except Exception as e:
-    print(f"  ✗ Fehler: {e}")
-    import traceback
-    traceback.print_exc()
+        print("Admin-User existiert bereits")
 finally:
     db.close()
-EOFPYTHON
-check_status "Admin-User erstellt"
-echo ""
+EOPY
 
-# 8. Frontend Setup
-print_header "Frontend-Setup..."
-cd $INSTALL_DIR/frontend
+deactivate
+print_success "Backend eingerichtet"
 
-print_info "Installiere npm-Pakete (kann einige Minuten dauern)..."
-npm install
-check_status "npm-Pakete installiert"
+################################################################################
+# 7. FRONTEND EINRICHTEN
+################################################################################
+print_header "Frontend einrichten"
+cd "$INSTALL_DIR/frontend"
 
-print_info "Erstelle .env Datei..."
-cat > .env <<EOF
-VITE_API_BASE_URL=http://${IP_ADDRESS}:8000/api
-EOF
-check_status ".env Datei erstellt"
+print_info "Installiere npm Dependencies..."
+npm install || error_exit "npm install fehlgeschlagen"
 
-print_info "Baue Frontend (kann einige Minuten dauern)..."
-npm run build
-check_status "Frontend gebaut"
-echo ""
+print_info "Baue Frontend..."
+npm run build || error_exit "Frontend Build fehlgeschlagen"
 
-# 9. Systemd Services erstellen
-print_header "Erstelle Systemd Services..."
+print_success "Frontend gebaut"
+
+################################################################################
+# 8. SYSTEMD SERVICES ERSTELLEN
+################################################################################
+print_header "Systemd Services einrichten"
 
 # Backend Service
 print_info "Erstelle Backend Service..."
-cat > /etc/systemd/system/feuerwehr-backend.service <<EOF
+cat > /etc/systemd/system/feuerwehr-backend.service << 'EOSRV'
 [Unit]
 Description=Feuerwehr Anwesenheitssystem Backend
 After=network.target postgresql.service
@@ -286,21 +254,22 @@ Wants=postgresql.service
 
 [Service]
 Type=simple
-User=$USER_NAME
-WorkingDirectory=$INSTALL_DIR/backend
-Environment="PATH=$INSTALL_DIR/backend/venv/bin:/usr/local/bin:/usr/bin:/bin"
-ExecStart=$INSTALL_DIR/backend/venv/bin/python main.py
+User=pi
+WorkingDirectory=/opt/feuerwehr-app/backend
+Environment="PATH=/opt/feuerwehr-app/backend/venv/bin:/usr/local/bin:/usr/bin:/bin"
+ExecStart=/opt/feuerwehr-app/backend/venv/bin/python main.py
 Restart=always
 RestartSec=10
+StandardOutput=journal
+StandardError=journal
 
 [Install]
 WantedBy=multi-user.target
-EOF
-check_status "Backend Service erstellt"
+EOSRV
 
 # Frontend Service
 print_info "Erstelle Frontend Service..."
-cat > /etc/systemd/system/feuerwehr-frontend.service <<EOF
+cat > /etc/systemd/system/feuerwehr-frontend.service << 'EOSRV'
 [Unit]
 Description=Feuerwehr Anwesenheitssystem Frontend
 After=network.target feuerwehr-backend.service
@@ -308,21 +277,22 @@ Wants=feuerwehr-backend.service
 
 [Service]
 Type=simple
-User=$USER_NAME
-WorkingDirectory=$INSTALL_DIR/frontend
+User=pi
+WorkingDirectory=/opt/feuerwehr-app/frontend
 Environment="PATH=/usr/local/bin:/usr/bin:/bin"
 ExecStart=/usr/bin/npm run dev -- --host 0.0.0.0 --port 5173
 Restart=always
 RestartSec=10
+StandardOutput=journal
+StandardError=journal
 
 [Install]
 WantedBy=multi-user.target
-EOF
-check_status "Frontend Service erstellt"
+EOSRV
 
 # Kiosk Service
 print_info "Erstelle Kiosk Service..."
-cat > /etc/systemd/system/feuerwehr-kiosk.service <<EOF
+cat > /etc/systemd/system/feuerwehr-kiosk.service << EOSRV
 [Unit]
 Description=Feuerwehr Kiosk Mode
 After=graphical.target feuerwehr-frontend.service
@@ -330,95 +300,124 @@ Wants=feuerwehr-frontend.service
 
 [Service]
 Type=simple
-User=$USER_NAME
+User=pi
 Environment=DISPLAY=:0
-Environment=XAUTHORITY=/home/$USER_NAME/.Xauthority
-ExecStartPre=/bin/sleep 10
-ExecStart=/usr/bin/chromium-browser --kiosk --noerrdialogs --disable-infobars --no-first-run --check-for-update-interval=31536000 --disable-session-crashed-bubble --disable-translate --disable-features=TranslateUI http://$IP_ADDRESS:5173/kiosk
+Environment=XAUTHORITY=/home/pi/.Xauthority
+ExecStartPre=/bin/sleep 15
+ExecStart=/usr/bin/chromium-browser \\
+    --kiosk \\
+    --noerrdialogs \\
+    --disable-infobars \\
+    --no-first-run \\
+    --check-for-update-interval=31536000 \\
+    --disable-session-crashed-bubble \\
+    --disable-translate \\
+    --disable-features=TranslateUI \\
+    --disable-save-password-bubble \\
+    http://${IP_ADDRESS}:5173/kiosk
 Restart=always
 RestartSec=10
 
 [Install]
 WantedBy=graphical.target
-EOF
-check_status "Kiosk Service erstellt"
+EOSRV
 
-# Services aktivieren und starten
-print_info "Lade Systemd Konfiguration neu..."
+print_success "Services erstellt"
+
+################################################################################
+# 9. SERVICES AKTIVIEREN UND STARTEN
+################################################################################
+print_header "Services starten"
 systemctl daemon-reload
-check_status "Systemd neu geladen"
 
 print_info "Aktiviere Services..."
 systemctl enable feuerwehr-backend
 systemctl enable feuerwehr-frontend
 systemctl enable feuerwehr-kiosk
-check_status "Services aktiviert"
+print_success "Services aktiviert"
 
 print_info "Starte Backend..."
 systemctl start feuerwehr-backend
 sleep 3
-check_status "Backend gestartet"
+if systemctl is-active --quiet feuerwehr-backend; then
+    print_success "Backend läuft"
+else
+    print_error "Backend startet nicht - prüfe Logs: sudo journalctl -u feuerwehr-backend -n 50"
+fi
 
 print_info "Starte Frontend..."
 systemctl start feuerwehr-frontend
 sleep 3
-check_status "Frontend gestartet"
-echo ""
+if systemctl is-active --quiet feuerwehr-frontend; then
+    print_success "Frontend läuft"
+else
+    print_error "Frontend startet nicht - prüfe Logs: sudo journalctl -u feuerwehr-frontend -n 50"
+fi
 
-# 10. Status prüfen
-print_header "Prüfe Service-Status..."
-echo ""
-systemctl status feuerwehr-backend --no-pager -l
-echo ""
-systemctl status feuerwehr-frontend --no-pager -l
-echo ""
+################################################################################
+# 10. BERECHTIGUNGEN SETZEN
+################################################################################
+print_header "Berechtigungen anpassen"
+chown -R pi:pi "$INSTALL_DIR"
+print_success "Berechtigungen gesetzt"
 
-# 11. Raspberry Pi Optimierungen
-print_header "Raspberry Pi 5 Optimierungen..."
+################################################################################
+# 11. RASPBERRY PI OPTIMIERUNGEN
+################################################################################
+print_header "Raspberry Pi Optimierungen"
 
-print_info "Erhöhe GPU Memory auf 256MB..."
-if ! grep -q "gpu_mem=256" /boot/firmware/config.txt; then
+print_info "GPU Memory auf 256MB erhöhen..."
+if ! grep -q "gpu_mem=256" /boot/firmware/config.txt 2>/dev/null; then
     echo "gpu_mem=256" >> /boot/firmware/config.txt
     print_success "GPU Memory erhöht"
 else
     print_info "GPU Memory bereits konfiguriert"
 fi
 
-print_info "Erhöhe Swap auf 2GB..."
-sed -i 's/CONF_SWAPSIZE=.*/CONF_SWAPSIZE=2048/' /etc/dphys-swapfile
-systemctl restart dphys-swapfile
-check_status "Swap erhöht"
-echo ""
+print_info "Bildschirmschoner deaktivieren..."
+if [ ! -f /home/pi/.xsessionrc ]; then
+    cat > /home/pi/.xsessionrc << 'EOXS'
+xset s off
+xset -dpms
+xset s noblank
+unclutter -idle 0.1 -root &
+EOXS
+    chown pi:pi /home/pi/.xsessionrc
+    print_success "Bildschirmschoner deaktiviert"
+fi
 
-# Zusammenfassung
+################################################################################
+# INSTALLATION ABGESCHLOSSEN
+################################################################################
 echo ""
-echo "=========================================================="
-echo "✅ Installation abgeschlossen!"
-echo "=========================================================="
+echo -e "${GREEN}╔══════════════════════════════════════════════════════╗${NC}"
+echo -e "${GREEN}║                                                      ║${NC}"
+echo -e "${GREEN}║          ✓  INSTALLATION ERFOLGREICH  ✓             ║${NC}"
+echo -e "${GREEN}║                                                      ║${NC}"
+echo -e "${GREEN}╚══════════════════════════════════════════════════════╝${NC}"
 echo ""
-print_success "Backend läuft auf: http://${IP_ADDRESS}:${BACKEND_PORT}"
-print_success "Frontend läuft auf: http://${IP_ADDRESS}:${FRONTEND_PORT}"
-print_success "API Dokumentation: http://${IP_ADDRESS}:${BACKEND_PORT}/docs"
+echo -e "${CYAN}🌐 ZUGRIFF:${NC}"
+echo "   Admin-Panel:  http://${IP_ADDRESS}:5173/admin/login"
+echo "   Kiosk-Modus:  http://${IP_ADDRESS}:5173/kiosk"
+echo "   API-Docs:     http://${IP_ADDRESS}:8000/docs"
 echo ""
-print_info "Standard Admin-Login:"
-print_info "  Username: admin"
-print_info "  Password: admin"
+echo -e "${CYAN}👤 ADMIN-LOGIN:${NC}"
+echo "   Username: admin"
+echo "   Password: admin"
 echo ""
-print_info "Services verwalten:"
-print_info "  sudo systemctl status feuerwehr-backend"
-print_info "  sudo systemctl status feuerwehr-frontend"
-print_info "  sudo systemctl status feuerwehr-kiosk"
-print_info "  sudo systemctl restart feuerwehr-backend"
-print_info "  sudo systemctl restart feuerwehr-frontend"
+echo -e "${CYAN}🔧 SERVICES VERWALTEN:${NC}"
+echo "   Status:   sudo systemctl status feuerwehr-backend"
+echo "   Status:   sudo systemctl status feuerwehr-frontend"
+echo "   Status:   sudo systemctl status feuerwehr-kiosk"
+echo "   Restart:  sudo systemctl restart feuerwehr-backend"
+echo "   Logs:     sudo journalctl -u feuerwehr-backend -f"
 echo ""
-print_info "Logs ansehen:"
-print_info "  sudo journalctl -u feuerwehr-backend -f"
-print_info "  sudo journalctl -u feuerwehr-frontend -f"
-print_info "  sudo journalctl -u feuerwehr-kiosk -f"
+echo -e "${CYAN}📋 INSTALLATION:${NC}"
+echo "   Verzeichnis: $INSTALL_DIR"
+echo "   Log-Datei:   $LOG_FILE"
 echo ""
-print_info "Installations-Log gespeichert in: $LOG_FILE"
-echo ""
-print_info "🔄 Neustart empfohlen für Kiosk-Autostart: sudo reboot"
+echo -e "${YELLOW}⚠️  WICHTIG:${NC}"
+echo "   Für Kiosk-Autostart beim Booten: ${GREEN}sudo reboot${NC}"
 echo ""
 print_success "Viel Erfolg mit dem Feuerwehr Anwesenheitssystem! 🚒"
-echo "=========================================================="
+echo ""
