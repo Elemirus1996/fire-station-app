@@ -102,7 +102,7 @@ PACKAGES=(
     "postgresql"
     "postgresql-contrib"
     "libpq-dev"
-    "chromium-browser"
+    "chromium"
     "unclutter"
     "x11-xserver-utils"
 )
@@ -286,7 +286,8 @@ Type=simple
 User=$USER
 WorkingDirectory=/opt/feuerwehr-app/frontend
 Environment="PATH=/usr/local/bin:/usr/bin:/bin"
-ExecStart=/usr/bin/npm run dev -- --host 0.0.0.0 --port 5173
+ExecStartPre=/bin/sh -c 'fuser -k 5173/tcp || true'
+ExecStart=/usr/bin/npm run dev -- --host 0.0.0.0 --port 5173 --strictPort
 Restart=always
 RestartSec=10
 StandardOutput=journal
@@ -310,7 +311,7 @@ User=$USER
 Environment=DISPLAY=:0
 Environment=XAUTHORITY=/home/$USER/.Xauthority
 ExecStartPre=/bin/sleep 15
-ExecStart=/usr/bin/chromium-browser \\
+ExecStart=/usr/bin/chromium \\
     --kiosk \\
     --noerrdialogs \\
     --disable-infobars \\

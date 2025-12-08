@@ -103,7 +103,7 @@ User=pi
 Environment=DISPLAY=:0
 Environment=XAUTHORITY=/home/pi/.Xauthority
 ExecStartPre=/bin/sleep 10
-ExecStart=/usr/bin/chromium-browser --kiosk --noerrdialogs --disable-infobars --no-first-run --check-for-update-interval=31536000 --disable-session-crashed-bubble --disable-translate --disable-features=TranslateUI http://$IP_ADDRESS:5173/kiosk
+ExecStart=/usr/bin/chromium --kiosk --noerrdialogs --disable-infobars --no-first-run --check-for-update-interval=31536000 --disable-session-crashed-bubble --disable-translate --disable-features=TranslateUI http://$IP_ADDRESS:5173/kiosk
 Restart=always
 RestartSec=10
 

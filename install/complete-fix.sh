@@ -149,7 +149,7 @@ User=pi
 Environment=DISPLAY=:0
 Environment=XAUTHORITY=/home/pi/.Xauthority
 ExecStartPre=/bin/sleep 10
-ExecStart=/usr/bin/chromium-browser --kiosk --noerrdialogs --disable-infobars --no-first-run --disable-session-crashed-bubble http://${IP_ADDRESS}:5173/kiosk
+ExecStart=/usr/bin/chromium --kiosk --noerrdialogs --disable-infobars --no-first-run --disable-session-crashed-bubble http://${IP_ADDRESS}:5173/kiosk
 Restart=always
 RestartSec=10
 
