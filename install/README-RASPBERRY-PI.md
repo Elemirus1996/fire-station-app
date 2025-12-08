@@ -26,11 +26,8 @@ Automatische Installation und Konfiguration der Feuerwehr Anwesenheitssystem auf
 # Script herunterladen
 wget https://raw.githubusercontent.com/Elemirus1996/fire-station-app/main/install/install-rpi.sh
 
-# Ausführbar machen
-chmod +x install-rpi.sh
-
-# Als root ausführen
-sudo ./install-rpi.sh
+# Als root ausführen (chmod nicht nötig, wird automatisch gemacht)
+sudo bash install-rpi.sh
 ```
 
 Das Script führt automatisch folgende Schritte aus:
