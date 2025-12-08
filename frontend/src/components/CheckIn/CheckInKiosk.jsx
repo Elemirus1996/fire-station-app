@@ -162,12 +162,25 @@ const CheckInKiosk = () => {
     try {
       const response = await api.post('/checkin/validate-token', { token: qrToken });
       if (response.data.valid) {
-        const sessionResponse = await api.get(`/sessions/${response.data.session_id}`);
-        setSelectedSession(sessionResponse.data);
-        setShowSessionSelect(false);
+        // Load all active sessions and find the one matching this session_id
+        const sessionsResponse = await api.get('/sessions/active/current');
+        const activeSessions = Array.isArray(sessionsResponse.data) ? sessionsResponse.data : [];
+        
+        const matchingSession = activeSessions.find(s => s.id === response.data.session_id);
+        
+        if (matchingSession) {
+          setSelectedSession(matchingSession);
+          setShowSessionSelect(false);
+          setMessage({ text: 'QR-Code erfolgreich gescannt', type: 'success' });
+        } else {
+          setMessage({ text: 'Session nicht gefunden oder nicht mehr aktiv', type: 'error' });
+          loadActiveSessions();
+        }
       }
     } catch (error) {
+      console.error('QR-Code Validierungsfehler:', error);
       setMessage({ text: 'Ungültiger QR-Code', type: 'error' });
+      loadActiveSessions();
     }
   };
 
