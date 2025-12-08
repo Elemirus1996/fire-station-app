@@ -219,11 +219,13 @@ check_status "Datenbank initialisiert"
 
 print_info "Erstelle Admin-User..."
 python << 'EOFPYTHON'
+import sys
+sys.path.insert(0, '/opt/feuerwehr-app/backend')
+
 from app.database import SessionLocal
 from app.models import AdminUser
-from passlib.context import CryptContext
+from app.utils.auth import get_password_hash
 
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 db = SessionLocal()
 
 try:
@@ -234,12 +236,12 @@ try:
         print("  Erstelle Admin-User...")
         admin = AdminUser(
             username="admin",
-            hashed_password=pwd_context.hash("admin123"),
+            hashed_password=get_password_hash("admin"),
             role="admin"
         )
         db.add(admin)
         db.commit()
-        print("  ✓ Admin-User erstellt (Username: admin, Password: admin123)")
+        print("  ✓ Admin-User erstellt (Username: admin, Password: admin)")
     else:
         print("  ✓ Admin-User existiert bereits")
 except Exception as e:
